@@ -15,10 +15,15 @@ services:
       # Flask configuration
       - FLASK_ENV=${FLASK_ENV:-production}
       - FLASK_DEBUG=${FLASK_DEBUG:-false}
+      # Fix protobuf compatibility for ChromaDB
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     volumes:
       # Mount directories for logs and results
       - ./logs:/app/logs
       - ./results:/app/results
+      # Mount RAG knowledge base and vector store
+      - ./rag-knowledge-base:/app/rag-knowledge-base:ro
+      - ./chroma_db:/app/chroma_db
       # Mount your .env file (optional, for API keys)
       - ./.env:/app/.env:ro
     networks:

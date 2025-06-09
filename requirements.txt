@@ -14,3 +14,11 @@ requests>=2.32.0
 flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=21.2.0
+
+# RAG Dependencies
+chromadb>=0.4.0
+langchain-chroma>=0.1.0
+sentence-transformers>=2.2.0
+tiktoken>=0.5.0
+unstructured>=0.10.0
+protobuf>=3.20.0,<4.0.0  # Fix for ChromaDB compatibility

@@ -16,7 +16,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Import from refactored modules
-from reviewers import EnhancedCodeReviewer
+from reviewers import EnhancedCodeReviewer, RAGCodeReviewer
 
 # Load environment variables
 load_dotenv()
@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Initialize the code reviewer
+# Initialize the code reviewers
 reviewer = EnhancedCodeReviewer()
+rag_reviewer = RAGCodeReviewer()
 
 # Configuration
 EXAMPLES_DIR = "examples"
@@ -94,6 +95,12 @@ def home():
                 "/review/{filename}": "Review specific file from examples",
                 "/review-all": "Review all files in examples directory",
                 "/review-custom": "Review custom code (POST)",
+                "/rag/review/{filename}": "RAG-enhanced file review",
+                "/rag/review-custom": "RAG-enhanced custom code review (POST)",
+                "/rag/compare": "Compare RAG vs traditional review (POST)",
+                "/rag/search-guidelines": "Search coding guidelines (POST)",
+                "/rag/knowledge-base/stats": "Get knowledge base statistics",
+                "/rag/knowledge-base/refresh": "Refresh knowledge base (POST)",
             },
             "available_models": len(available_models),
             "available_files": len(available_files),
@@ -433,6 +440,252 @@ def review_custom_code():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# RAG-Enhanced Endpoints
+@app.route("/rag/review/<filename>", methods=["GET", "POST"])
+def rag_review_file(filename: str):
+    """Review a specific file using RAG-enhanced prompts"""
+    try:
+        # Get parameters
+        model_id = request.args.get("model", None)
+        language = request.args.get("language", DEFAULT_LANGUAGE)
+        num_guidelines = int(request.args.get("guidelines", 3))
+
+        # Validate filename
+        if not filename.endswith(".py"):
+            filename += ".py"
+
+        available_files = get_available_files()
+        if filename not in available_files:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"File {filename} not found",
+                        "available_files": available_files,
+                    }
+                ),
+                404,
+            )
+
+        # Read file content
+        code_content = read_file_content(filename)
+
+        # Run RAG review
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(
+                rag_reviewer.review_code_with_rag(
+                    code_content, language, model_id, num_guidelines
+                )
+            )
+        finally:
+            loop.close()
+
+        response_data = {
+            "success": True,
+            "filename": filename,
+            "rating": result.rating,
+            "model_used": result.model_used,
+            "technique_used": result.technique_used,
+            "timestamp": result.timestamp,
+            "issues": result.issues,
+            "suggestions": result.suggestions,
+            "reasoning": result.reasoning,
+            "guidelines_used": getattr(result, "guidelines_used", []),
+            "rag_context_quality": getattr(result, "rag_context_quality", "unknown"),
+            "num_guidelines": getattr(result, "num_guidelines", 0),
+            "guideline_categories": getattr(result, "guideline_categories", []),
+            "code_size": len(code_content),
+            "code_lines": len(code_content.splitlines()),
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        logger.error(f"Error in RAG review: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/rag/review-custom", methods=["POST"])
+def rag_review_custom():
+    """Review custom code using RAG-enhanced prompts"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "JSON body required"}), 400
+
+        # Get parameters
+        code_content = data.get("code")
+        if not code_content:
+            return jsonify({"success": False, "error": "Code content is required"}), 400
+
+        model_id = data.get("model", None)
+        language = data.get("language", DEFAULT_LANGUAGE)
+        num_guidelines = data.get("guidelines", 3)
+
+        # Run RAG review
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(
+                rag_reviewer.review_code_with_rag(
+                    code_content, language, model_id, num_guidelines
+                )
+            )
+        finally:
+            loop.close()
+
+        response_data = {
+            "success": True,
+            "rating": result.rating,
+            "model_used": result.model_used,
+            "technique_used": result.technique_used,
+            "timestamp": result.timestamp,
+            "issues": result.issues,
+            "suggestions": result.suggestions,
+            "reasoning": result.reasoning,
+            "guidelines_used": getattr(result, "guidelines_used", []),
+            "rag_context_quality": getattr(result, "rag_context_quality", "unknown"),
+            "num_guidelines": getattr(result, "num_guidelines", 0),
+            "guideline_categories": getattr(result, "guideline_categories", []),
+            "code_size": len(code_content),
+            "code_lines": len(code_content.splitlines()),
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        logger.error(f"Error in RAG custom review: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/rag/compare", methods=["POST"])
+def compare_rag_vs_traditional():
+    """Compare RAG-enhanced vs traditional review"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "JSON body required"}), 400
+
+        code_content = data.get("code")
+        if not code_content:
+            return jsonify({"success": False, "error": "Code content is required"}), 400
+
+        model_id = data.get("model", None)
+        language = data.get("language", DEFAULT_LANGUAGE)
+
+        # Run comparison
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            comparison = loop.run_until_complete(
+                rag_reviewer.compare_rag_vs_traditional(
+                    code_content, language, model_id
+                )
+            )
+        finally:
+            loop.close()
+
+        return jsonify(
+            {
+                "success": True,
+                "comparison": comparison,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error in comparison: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/rag/search-guidelines", methods=["POST"])
+def search_guidelines():
+    """Search coding guidelines database"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "JSON body required"}), 400
+
+        query = data.get("query")
+        if not query:
+            return jsonify({"success": False, "error": "Search query is required"}), 400
+
+        category = data.get("category", None)
+        k = data.get("limit", 5)
+
+        # Run search
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            results = loop.run_until_complete(
+                rag_reviewer.search_guidelines(query, category, k)
+            )
+        finally:
+            loop.close()
+
+        return jsonify(
+            {
+                "success": True,
+                "query": query,
+                "category": category,
+                "results": results,
+                "count": len(results),
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error searching guidelines: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/rag/knowledge-base/stats", methods=["GET"])
+def get_knowledge_base_stats():
+    """Get knowledge base statistics"""
+    try:
+        stats = rag_reviewer.get_knowledge_base_stats()
+        return jsonify(
+            {"success": True, "stats": stats, "timestamp": datetime.now().isoformat()}
+        )
+    except Exception as e:
+        logger.error(f"Error getting knowledge base stats: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/rag/knowledge-base/refresh", methods=["POST"])
+def refresh_knowledge_base():
+    """Refresh the knowledge base"""
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            success = loop.run_until_complete(rag_reviewer.refresh_knowledge_base())
+        finally:
+            loop.close()
+
+        if success:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Knowledge base refreshed successfully",
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+        else:
+            return (
+                jsonify(
+                    {"success": False, "error": "Failed to refresh knowledge base"}
+                ),
+                500,
+            )
+
+    except Exception as e:
+        logger.error(f"Error refreshing knowledge base: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors"""
@@ -448,6 +701,12 @@ def not_found(error):
                     "/review/<filename>",
                     "/review-all",
                     "/review-custom",
+                    "/rag/review/<filename>",
+                    "/rag/review-custom",
+                    "/rag/compare",
+                    "/rag/search-guidelines",
+                    "/rag/knowledge-base/stats",
+                    "/rag/knowledge-base/refresh",
                 ],
             }
         ),
@@ -484,6 +743,13 @@ if __name__ == "__main__":
     print("  • GET  /review/<filename> - Review specific file")
     print("  • GET  /review-all        - Review all files")
     print("  • POST /review-custom     - Review custom code")
+    print("\n🧠 RAG-Enhanced Endpoints:")
+    print("  • GET  /rag/review/<filename>      - RAG-enhanced file review")
+    print("  • POST /rag/review-custom          - RAG-enhanced custom review")
+    print("  • POST /rag/compare                - Compare RAG vs traditional")
+    print("  • POST /rag/search-guidelines      - Search coding guidelines")
+    print("  • GET  /rag/knowledge-base/stats   - Knowledge base statistics")
+    print("  • POST /rag/knowledge-base/refresh - Refresh knowledge base")
 
     print(f"\n🔧 Starting server on http://0.0.0.0:5000 (exposed on host port 8080)")
     print("=" * 60)
