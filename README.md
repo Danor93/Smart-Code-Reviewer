@@ -41,131 +41,42 @@ This project demonstrates key concepts for AI developer interviews:
 
 ## 📦 Installation
 
+### Quick Start
+
+```bash
+# Docker (Recommended)
+git clone https://github.com/Danor93/Smart-Code-Reviewer.git
+cd smart-code-reviewer
+cp .env.example .env  # Add your API keys
+./docker-run.sh run   # Start Flask API at http://localhost:8080
+```
+
+### Detailed Installation Instructions
+
+📖 **For complete installation instructions, troubleshooting, and deployment options, see [INSTALL.md](INSTALL.md)**
+
 ### Prerequisites
 
-- Python 3.8+
-- At least one API key from supported providers (OpenAI, Anthropic, Google, HuggingFace)
-- Optional: Ollama installed for local models
+- **Docker & Docker Compose** (for containerized deployment)
+- **Python 3.8+** (for local installation)
+- **At least one API key** from supported providers (OpenAI, Anthropic, Google, HuggingFace)
+- **Optional**: Ollama for local models
 
-### Quick Setup
+### API Usage Examples
 
-1. **Clone and Navigate**
+```bash
+# Review a specific file
+curl "http://localhost:8080/review/vulnerable_code.py?technique=zero_shot&model=gpt-4"
 
-   ```bash
-   git clone git@github.com:Danor93/Smart-Code-Reviewer.git
-   #or
-   git clone https://github.com/Danor93/Smart-Code-Reviewer.git
-   cd smart-code-reviewer
-   ```
-
-2. **Create and Activate Virtual Environment**
-
-   **Why Virtual Environment?** Isolates project dependencies from your system Python, preventing conflicts and ensuring reproducible builds.
-
-   ```bash
-   # Create virtual environment
-   python3 -m venv venv
-
-   # Activate virtual environment
-   # On macOS/Linux:
-   source venv/bin/activate
-
-   # On Windows:
-   venv\Scripts\activate
-
-   # Verify activation (you should see (venv) in your terminal prompt)
-   which python  # Should point to venv/bin/python
-   ```
-
-3. **Install Dependencies**
-
-   ```bash
-   # Upgrade pip to latest version
-   pip install --upgrade pip
-
-   # Install all project dependencies
-   pip install -r requirements.txt
-
-   # Verify installation
-   pip list | grep langchain  # Should show LangChain packages
-   ```
-
-4. **Setup Environment Variables**
-
-   ```bash
-   # Copy the example file
-   cp .env.example .env
-
-   # Edit .env with your actual API keys
-   nano .env  # or use your preferred editor
-   ```
-
-5. **Run the Enhanced Code Reviewer**
-
-   ```bash
-   python enhanced_code_reviewer.py
-
-   # Or review a specific file
-   python enhanced_code_reviewer.py path/to/your/code.py
-
-   # Or review all Python files in a directory
-   python enhanced_code_reviewer.py /path/to/directory/
-   ```
-
-6. **When Finished (Optional)**
-
-   ```bash
-   # Deactivate virtual environment
-   deactivate
-
-   # Remove virtual environment (if you want to clean up)
-   rm -rf venv/
-   ```
-
-## 🔑 Getting API Keys
-
-You need at least one API key to use the system. The code reviewer will automatically detect which models are available based on your API keys.
-
-### OpenAI API (Recommended)
-
-1. Visit [OpenAI Platform](https://platform.openai.com/)
-2. Sign up for an account
-3. Go to API Keys section
-4. Generate a new secret key
-5. **Free tier**: $5 in free credits for new users
-
-### Anthropic Claude API
-
-1. Visit [Anthropic Console](https://console.anthropic.com/)
-2. Sign up for an account
-3. Navigate to API Keys section
-4. Create a new API key
-5. **Free tier**: $5 in free credits
-
-### Google AI API
-
-1. Visit [Google AI Studio](https://ai.google.dev/)
-2. Sign up and get API access
-3. Generate an API key
-4. **Free tier**: Generous free usage limits
-
-### HuggingFace API
-
-1. Visit [HuggingFace](https://huggingface.co/)
-2. Create an account
-3. Go to Settings → Access Tokens
-4. Create a new token
-5. **Free tier**: Access to many open-source models
-
-### Ollama (Local Models)
-
-1. Install [Ollama](https://ollama.ai/)
-2. Pull models: `ollama pull mistral`
-3. **Completely free**: Run models locally
+# Review custom code
+curl -X POST http://localhost:8080/review-custom \
+  -H "Content-Type: application/json" \
+  -d '{"code": "def test(): pass", "technique": "zero_shot", "model": "gpt-4"}'
+```
 
 ## 💡 Usage Examples
 
-### Basic Code Review
+### Python API Usage
 
 ```python
 from reviewers import EnhancedCodeReviewer
@@ -184,75 +95,23 @@ result = await reviewer.review_code_async(
 print(f"Rating: {result.rating}")
 print(f"Issues: {result.issues}")
 print(f"Suggestions: {result.suggestions}")
-print(f"Model Used: {result.model_used}")
-print(f"Execution Time: {result.execution_time:.2f}s")
 ```
 
-### Technique Comparison
+### REST API Usage
 
 ```python
-# Compare different prompting techniques
-techniques = ["zero_shot", "few_shot", "cot"]
-for technique in techniques:
-    result = await reviewer.review_code_async(code, "python", technique, "gpt-4")
-    print(f"{technique}: {result.rating} - {len(result.issues)} issues")
-```
+import requests
 
-### Multi-Model Comparison
+# Review code via REST API
+response = requests.post('http://localhost:8080/review-custom', json={
+    'code': 'def calculate_password_strength(password): return "weak"',
+    'technique': 'zero_shot',
+    'model': 'gpt-4'
+})
 
-```python
-# Compare multiple AI models simultaneously
-comparison = await reviewer.compare_models_async(code, "python", "zero_shot")
-for model_id, result in comparison.items():
-    print(f"{model_id}: {result.rating} ({result.execution_time:.2f}s)")
-```
-
-### Synchronous Usage
-
-```python
-# If you prefer synchronous calls
-result = reviewer.review_code(code, "python", "zero_shot", "gpt-4")
-print(f"Rating: {result.rating}")
-```
-
-## 🔧 Troubleshooting
-
-### Virtual Environment Issues
-
-**Problem**: `python3 -m venv venv` fails
-
-```bash
-# Solution: Install python3-venv package
-sudo apt-get install python3-venv  # Ubuntu/Debian
-brew install python3               # macOS
-```
-
-**Problem**: Virtual environment not activating
-
-```bash
-# Check if you're in the right directory
-pwd  # Should show smart-code-reviewer directory
-ls   # Should show venv/ folder
-
-# Try absolute path
-source /full/path/to/smart-code-reviewer/venv/bin/activate
-```
-
-**Problem**: `pip install` fails with permissions error
-
-```bash
-# Make sure virtual environment is activated first
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-**Problem**: LangChain import errors
-
-```bash
-# Verify installation
-pip list | grep langchain
-# If missing, reinstall
-pip install --force-reinstall langchain langchain-openai langchain-anthropic
+result = response.json()
+print(f"Rating: {result['rating']}")
+print(f"Issues found: {len(result['issues'])}")
 ```
 
 ## 🏗️ Architecture

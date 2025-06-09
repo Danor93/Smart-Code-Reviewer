@@ -1,0 +1,52 @@
+services:
+  smart-code-reviewer:
+    build: .
+    image: smart-code-reviewer:latest
+    container_name: smart-code-reviewer
+    ports:
+      - "8080:5000"
+    environment:
+      # API Keys (set these in your .env file or as environment variables)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN:-}
+      - OLLAMA_API_URL=${OLLAMA_API_URL:-http://ollama:11434}
+      # Flask configuration
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_DEBUG=${FLASK_DEBUG:-false}
+    volumes:
+      # Mount directories for logs and results
+      - ./logs:/app/logs
+      - ./results:/app/results
+      # Mount your .env file (optional, for API keys)
+      - ./.env:/app/.env:ro
+    networks:
+      - reviewer-network
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Ollama service for local LLM support
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - reviewer-network
+    restart: unless-stopped
+
+volumes:
+  ollama-data:
+
+networks:
+  reviewer-network:
+    driver: bridge
