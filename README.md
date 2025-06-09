@@ -230,11 +230,21 @@ smart-code-reviewer/
 │   ├── async_web_crawler.py    # Async programming
 │   ├── blockchain_simulation.py # Complex algorithms
 │   └── complex_microservice.py # Microservice architecture
-├── enhanced_code_reviewer.py   # Main application entry point
+├── logs/                        # Application logs (created at runtime)
+├── results/                     # Review results output directory
+├── code-to-review/             # Directory for code files to review
+├── app.py                      # Flask REST API service
+├── enhanced_code_reviewer.py   # Command-line application entry point
+├── Dockerfile                  # Docker container configuration
+├── docker-compose.yml          # Multi-container Docker setup with Ollama
+├── docker-run.sh              # Docker management script
+├── .dockerignore              # Docker build context exclusions
 ├── models_config.yaml          # AI model configurations
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # Environment variables template
+├── .env                       # Your API keys (not in git)
 ├── .gitignore                 # Git ignore patterns
+├── INSTALL.md                 # Detailed installation guide
 └── README.md                  # This documentation
 ```
 
