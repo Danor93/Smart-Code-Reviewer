@@ -136,6 +136,9 @@ results/
 logs/
 *.log
 
+# ChromaDB vector database (generated at runtime)
+chroma_db/
+
 # API keys and secrets
 .env
 secrets.json
