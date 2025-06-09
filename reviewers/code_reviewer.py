@@ -91,9 +91,11 @@ class EnhancedCodeReviewer:
                 rating=result.get("rating", "Unknown"),
                 reasoning=result.get("reasoning", "No reasoning provided"),
                 model_used=model_id,
+                technique_used=technique,
+                timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
                 provider=model_config.provider,
                 execution_time=execution_time,
-                technique=technique,
+                technique=technique,  # For backward compatibility
             )
 
         except Exception as e:
@@ -104,9 +106,11 @@ class EnhancedCodeReviewer:
                 rating="Error",
                 reasoning=f"Failed to complete review: {str(e)}",
                 model_used=model_id,
+                technique_used=technique,
+                timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
                 provider="unknown",
                 execution_time=execution_time,
-                technique=technique,
+                technique=technique,  # For backward compatibility
             )
 
     def review_code(self, *args, **kwargs) -> ReviewResult:
@@ -183,9 +187,11 @@ class EnhancedCodeReviewer:
                     rating="Error",
                     reasoning=str(result),
                     model_used=model_id,
+                    technique_used=technique,
+                    timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
                     provider="unknown",
                     execution_time=0.0,
-                    technique=technique,
+                    technique=technique,  # For backward compatibility
                 )
             else:
                 comparison[model_id] = result

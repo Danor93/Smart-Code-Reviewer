@@ -6,7 +6,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 # Create a non-root user
 RUN groupadd --gid 1000 appuser && \
@@ -32,7 +33,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p logs results
+RUN mkdir -p logs results chroma_db
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app

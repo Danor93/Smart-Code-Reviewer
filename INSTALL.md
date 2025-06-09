@@ -320,6 +320,25 @@ print(f"Model Used: {result.model_used}")
 print(f"Execution Time: {result.execution_time:.2f}s")
 ```
 
+### RAG-Enhanced Review
+
+```python
+from reviewers import RAGCodeReviewer
+
+# Initialize RAG reviewer
+rag_reviewer = RAGCodeReviewer()
+
+# Perform RAG-enhanced review
+result = await rag_reviewer.review_code_with_rag(
+    code="password = 'admin123'",
+    language="python"
+)
+
+print(f"Rating: {result.rating}")
+print(f"Guidelines used: {result.num_guidelines}")
+print(f"Categories: {result.guideline_categories}")
+```
+
 ### Technique Comparison
 
 ```python
@@ -328,6 +347,16 @@ techniques = ["zero_shot", "few_shot", "cot"]
 for technique in techniques:
     result = await reviewer.review_code_async(code, "python", technique, "gpt-4")
     print(f"{technique}: {result.rating} - {len(result.issues)} issues")
+```
+
+### RAG vs Traditional Comparison
+
+```python
+# Compare RAG vs traditional approaches
+comparison = await rag_reviewer.compare_rag_vs_traditional(code, "python")
+metrics = comparison.get("comparison", {})
+print(f"Additional issues found: {metrics.get('additional_issues_found', 0)}")
+print(f"Guidelines referenced: {metrics.get('guidelines_referenced', 0)}")
 ```
 
 ### Multi-Model Comparison
@@ -344,17 +373,24 @@ for model_id, result in comparison.items():
 ```python
 import requests
 
-# Review custom code via API
+# Traditional review
 response = requests.post('http://localhost:8080/review-custom', json={
-    'code': '''
-def calculate_password_strength(password):
-    if len(password) < 8:
-        return "weak"
-    return "strong"
-    ''',
+    'code': 'def calculate_password_strength(password): return "weak"',
     'technique': 'zero_shot',
     'model': 'gpt-4',
     'language': 'python'
+})
+
+# RAG-enhanced review
+response = requests.post('http://localhost:8080/rag/review-custom', json={
+    'code': 'password = "admin123"',
+    'language': 'python'
+})
+
+# Search guidelines
+response = requests.post('http://localhost:8080/rag/search-guidelines', json={
+    'query': 'password security',
+    'k': 3
 })
 
 result = response.json()
@@ -497,6 +533,60 @@ curl http://localhost:8080/models
 3. **Limit API rate limits** to avoid unexpected charges
 4. **Use HTTPS** when deploying the Flask API publicly
 5. **Implement authentication** for production API deployments
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Basic import tests
+python tests/test_imports.py
+
+# RAG functionality tests
+python tests/test_rag.py
+
+# Test specific components manually
+python -c "from reviewers import EnhancedCodeReviewer; print('✅ Basic imports work')"
+python -c "from reviewers import RAGCodeReviewer; print('✅ RAG imports work')"
+```
+
+### Docker Testing
+
+```bash
+# Build and test container
+docker build -t smart-code-reviewer:test .
+docker run --rm -d --name test-container -p 8080:5000 \
+  -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+  smart-code-reviewer:test
+
+# Test endpoints
+curl http://localhost:8080/
+curl http://localhost:8080/rag/knowledge-base/stats
+
+# Clean up
+docker stop test-container
+```
+
+### Test Scenarios
+
+The system includes comprehensive test cases:
+
+1. **Security Vulnerabilities**
+
+   - Hardcoded passwords
+   - SQL injection vulnerabilities
+   - Insecure cryptographic practices
+
+2. **Performance Issues**
+
+   - Inefficient algorithms (O(n²) complexity)
+   - Memory leaks
+   - Blocking I/O operations
+
+3. **Best Practices**
+   - Missing type hints
+   - Lack of documentation
+   - Error handling gaps
 
 ## 🚀 Production Deployment
 
