@@ -18,7 +18,7 @@ def test_basic_imports():
         print("✅ EnhancedCodeReviewer import successful")
     except ImportError as e:
         print(f"❌ EnhancedCodeReviewer import failed: {e}")
-        return False
+        assert False, f"EnhancedCodeReviewer import failed: {e}"
 
     try:
         from reviewers import RAGCodeReviewer
@@ -26,7 +26,7 @@ def test_basic_imports():
         print("✅ RAGCodeReviewer import successful")
     except ImportError as e:
         print(f"❌ RAGCodeReviewer import failed: {e}")
-        return False
+        assert False, f"RAGCodeReviewer import failed: {e}"
 
     try:
         from rag.document_loader import DocumentLoader
@@ -35,15 +35,15 @@ def test_basic_imports():
         print("✅ RAG components import successful")
     except ImportError as e:
         print(f"❌ RAG components import failed: {e}")
-        return False
+        assert False, f"RAG components import failed: {e}"
 
     try:
-        from models.data_models import ReviewResult, RAGContext, ComparisonResult
+        from models.data_models import ComparisonResult, RAGContext, ReviewResult
 
         print("✅ Data models import successful")
     except ImportError as e:
         print(f"❌ Data models import failed: {e}")
-        return False
+        assert False, f"Data models import failed: {e}"
 
     try:
         from app import app
@@ -51,19 +51,15 @@ def test_basic_imports():
         print("✅ Flask app import successful")
     except ImportError as e:
         print(f"❌ Flask app import failed: {e}")
-        return False
+        assert False, f"Flask app import failed: {e}"
 
-    return True
+    # If we get here, all imports succeeded
+    assert True
 
 
 if __name__ == "__main__":
     print("🧪 Testing Smart Code Reviewer Imports")
     print("=" * 40)
 
-    success = test_basic_imports()
-
-    if success:
-        print("\n🎉 All imports successful!")
-    else:
-        print("\n❌ Some imports failed!")
-        sys.exit(1)
+    test_basic_imports()
+    print("\n🎉 All imports successful!")

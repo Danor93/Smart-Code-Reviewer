@@ -4,20 +4,21 @@ Demonstrates common ML engineering patterns and potential issues
 for comprehensive code review testing.
 """
 
-import numpy as np
-import pandas as pd
-from typing import Dict, List, Tuple, Optional, Any
-import pickle
 import json
 import logging
+import os
+import pickle
+import warnings
 from dataclasses import dataclass
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from typing import Any, Dict, List, Optional, Tuple
+
+import joblib
+import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
-import joblib
-import os
-import warnings
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # ISSUE: Hardcoded configuration values
 MODEL_VERSION = "1.0.0"
@@ -111,9 +112,7 @@ class FeatureEngineer:
         # ISSUE: No feature validation or sanity checks
         return df_features
 
-    def encode_categorical_features(
-        self, df: pd.DataFrame, fit: bool = True
-    ) -> pd.DataFrame:
+    def encode_categorical_features(self, df: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
         """Encode categorical features"""
 
         df_encoded = df.copy()
@@ -136,9 +135,7 @@ class FeatureEngineer:
 
         return df_encoded
 
-    def scale_features(
-        self, df: pd.DataFrame, target_column: str, fit: bool = True
-    ) -> pd.DataFrame:
+    def scale_features(self, df: pd.DataFrame, target_column: str, fit: bool = True) -> pd.DataFrame:
         """Scale numerical features"""
 
         df_scaled = df.copy()
@@ -151,9 +148,7 @@ class FeatureEngineer:
             self.scalers["standard"] = scaler
         else:
             if "standard" in self.scalers:
-                df_scaled[feature_columns] = self.scalers["standard"].transform(
-                    df[feature_columns]
-                )
+                df_scaled[feature_columns] = self.scalers["standard"].transform(df[feature_columns])
 
         return df_scaled
 
@@ -198,12 +193,8 @@ class ModelTrainer:
         # ISSUE: Limited evaluation metrics
         results = {
             "validation_accuracy": val_score,
-            "feature_importance": dict(
-                zip(X_train.columns, self.model.feature_importances_)
-            ),
-            "classification_report": classification_report(
-                y_val, val_predictions, output_dict=True
-            ),
+            "feature_importance": dict(zip(X_train.columns, self.model.feature_importances_)),
+            "classification_report": classification_report(y_val, val_predictions, output_dict=True),
         }
 
         return results
@@ -266,20 +257,12 @@ class ModelPredictor:
         try:
             # ISSUE: No input validation
             # ISSUE: Feature engineering pipeline not properly applied
-            processed_data = self.feature_engineer.encode_categorical_features(
-                input_data, fit=False
-            )
-            processed_data = self.feature_engineer.scale_features(
-                processed_data, self.metadata.target_column, fit=False
-            )
+            processed_data = self.feature_engineer.encode_categorical_features(input_data, fit=False)
+            processed_data = self.feature_engineer.scale_features(processed_data, self.metadata.target_column, fit=False)
 
             # ISSUE: No handling of missing features
-            predictions = self.model.predict(
-                processed_data[self.metadata.feature_columns]
-            )
-            probabilities = self.model.predict_proba(
-                processed_data[self.metadata.feature_columns]
-            )
+            predictions = self.model.predict(processed_data[self.metadata.feature_columns])
+            probabilities = self.model.predict_proba(processed_data[self.metadata.feature_columns])
 
             return {
                 "predictions": predictions.tolist(),
@@ -304,9 +287,7 @@ class MLPipeline:
         self.model_trainer = None
         # ISSUE: No configuration validation
 
-    def run_training_pipeline(
-        self, data_source: str, target_column: str
-    ) -> ModelMetadata:
+    def run_training_pipeline(self, data_source: str, target_column: str) -> ModelMetadata:
         """Run the complete training pipeline"""
 
         logging.info("Starting ML training pipeline...")
@@ -317,9 +298,7 @@ class MLPipeline:
         df_clean = self.data_loader.basic_cleaning(df)
 
         # ISSUE: No data quality checks
-        logging.info(
-            f"Loaded {len(df_clean)} samples with {len(df_clean.columns)} features"
-        )
+        logging.info(f"Loaded {len(df_clean)} samples with {len(df_clean.columns)} features")
 
         # Feature engineering
         self.feature_engineer = FeatureEngineer()
@@ -333,17 +312,11 @@ class MLPipeline:
         y = df_scaled[target_column]
 
         # ISSUE: Fixed train-test split ratio
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=RANDOM_SEED, stratify=y
-        )
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=RANDOM_SEED, stratify=y)
 
         # Train model
-        self.model_trainer = ModelTrainer(
-            self.config.get("model_type", "random_forest")
-        )
-        training_results = self.model_trainer.train_model(
-            X_train, y_train, X_val, y_val
-        )
+        self.model_trainer = ModelTrainer(self.config.get("model_type", "random_forest"))
+        training_results = self.model_trainer.train_model(X_train, y_train, X_val, y_val)
 
         # Create metadata
         metadata = ModelMetadata(
@@ -365,14 +338,10 @@ class MLPipeline:
         model_path = os.path.join(MODEL_PATH, metadata.model_name)
         self.model_trainer.save_model(model_path, metadata)
 
-        logging.info(
-            f"Training completed. Validation accuracy: {metadata.accuracy:.3f}"
-        )
+        logging.info(f"Training completed. Validation accuracy: {metadata.accuracy:.3f}")
         return metadata
 
-    def run_batch_prediction(
-        self, data_source: str, model_name: str, output_path: str
-    ) -> None:
+    def run_batch_prediction(self, data_source: str, model_name: str, output_path: str) -> None:
         """Run batch predictions"""
 
         logging.info("Starting batch prediction pipeline...")

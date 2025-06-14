@@ -4,20 +4,21 @@ Flask Web Service for Enhanced Smart Code Reviewer
 Provides REST API endpoints for code review functionality
 """
 
-import os
 import asyncio
 import logging
-from pathlib import Path
-from typing import Dict, List, Any
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+from agents import CodeReviewAgent, CodeReviewRequest
 
 # Import from refactored modules
 from reviewers import EnhancedCodeReviewer, RAGCodeReviewer
-from agents import CodeReviewAgent, CodeReviewRequest
 
 # Load environment variables
 load_dotenv()
@@ -231,9 +232,7 @@ def review_file(filename: str):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            result = loop.run_until_complete(
-                reviewer.review_code_async(code_content, language, technique, model_id)
-            )
+            result = loop.run_until_complete(reviewer.review_code_async(code_content, language, technique, model_id))
         finally:
             loop.close()
 
@@ -318,11 +317,7 @@ def review_all_files():
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    result = loop.run_until_complete(
-                        reviewer.review_code_async(
-                            code_content, language, technique, model_id
-                        )
-                    )
+                    result = loop.run_until_complete(reviewer.review_code_async(code_content, language, technique, model_id))
                 finally:
                     loop.close()
 
@@ -339,9 +334,7 @@ def review_all_files():
 
             except Exception as e:
                 logger.error(f"Error reviewing {filename}: {e}")
-                results.append(
-                    {"filename": filename, "success": False, "error": str(e)}
-                )
+                results.append({"filename": filename, "success": False, "error": str(e)})
 
         total_execution_time = (datetime.now() - total_start_time).total_seconds()
 
@@ -352,9 +345,7 @@ def review_all_files():
             "successful_reviews": len(successful_reviews),
             "failed_reviews": len(results) - len(successful_reviews),
             "total_execution_time": round(total_execution_time, 2),
-            "average_time_per_file": (
-                round(total_execution_time / len(results), 2) if results else 0
-            ),
+            "average_time_per_file": (round(total_execution_time / len(results), 2) if results else 0),
             "total_issues": sum(len(r.get("issues", [])) for r in successful_reviews),
             "model_used": model_id,
             "technique_used": technique,
@@ -423,9 +414,7 @@ def review_custom_code():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            result = loop.run_until_complete(
-                reviewer.review_code_async(code_content, language, technique, model_id)
-            )
+            result = loop.run_until_complete(reviewer.review_code_async(code_content, language, technique, model_id))
         finally:
             loop.close()
 
@@ -480,9 +469,7 @@ def rag_review_file(filename: str):
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(
-                rag_reviewer.review_code_with_rag(
-                    code_content, language, model_id, num_guidelines
-                )
+                rag_reviewer.review_code_with_rag(code_content, language, model_id, num_guidelines)
             )
         finally:
             loop.close()
@@ -534,9 +521,7 @@ def rag_review_custom():
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(
-                rag_reviewer.review_code_with_rag(
-                    code_content, language, model_id, num_guidelines
-                )
+                rag_reviewer.review_code_with_rag(code_content, language, model_id, num_guidelines)
             )
         finally:
             loop.close()
@@ -584,11 +569,7 @@ def compare_rag_vs_traditional():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            comparison = loop.run_until_complete(
-                rag_reviewer.compare_rag_vs_traditional(
-                    code_content, language, model_id
-                )
-            )
+            comparison = loop.run_until_complete(rag_reviewer.compare_rag_vs_traditional(code_content, language, model_id))
         finally:
             loop.close()
 
@@ -624,9 +605,7 @@ def search_guidelines():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            results = loop.run_until_complete(
-                rag_reviewer.search_guidelines(query, category, k)
-            )
+            results = loop.run_until_complete(rag_reviewer.search_guidelines(query, category, k))
         finally:
             loop.close()
 
@@ -651,9 +630,7 @@ def get_knowledge_base_stats():
     """Get knowledge base statistics"""
     try:
         stats = rag_reviewer.get_knowledge_base_stats()
-        return jsonify(
-            {"success": True, "stats": stats, "timestamp": datetime.now().isoformat()}
-        )
+        return jsonify({"success": True, "stats": stats, "timestamp": datetime.now().isoformat()})
     except Exception as e:
         logger.error(f"Error getting knowledge base stats: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -680,9 +657,7 @@ def refresh_knowledge_base():
             )
         else:
             return (
-                jsonify(
-                    {"success": False, "error": "Failed to refresh knowledge base"}
-                ),
+                jsonify({"success": False, "error": "Failed to refresh knowledge base"}),
                 500,
             )
 
@@ -728,9 +703,7 @@ def agent_review_custom():
             code=data["code"],
             language=data.get("language", "python"),
             model_id=data.get("model_id", "gpt-4"),
-            user_request=data.get(
-                "user_request", "Perform a comprehensive code review"
-            ),
+            user_request=data.get("user_request", "Perform a comprehensive code review"),
             max_iterations=data.get("max_iterations", 5),
         )
 
@@ -791,9 +764,7 @@ def agent_review_file(filename: str):
         # Get parameters
         model_id = request.args.get("model", "gpt-4")
         language = request.args.get("language", "python")
-        user_request = request.args.get(
-            "request", f"Perform a comprehensive code review of {filename}"
-        )
+        user_request = request.args.get("request", f"Perform a comprehensive code review of {filename}")
 
         # Create request object
         review_request = CodeReviewRequest(
@@ -830,9 +801,7 @@ def agent_review_file(filename: str):
     except Exception as e:
         logger.error(f"Error in agent file review: {e}")
         return (
-            jsonify(
-                {"success": False, "error": str(e), "type": "agent_file_review_error"}
-            ),
+            jsonify({"success": False, "error": str(e), "type": "agent_file_review_error"}),
             500,
         )
 
@@ -914,4 +883,4 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Run the Flask app
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)  # nosec B104

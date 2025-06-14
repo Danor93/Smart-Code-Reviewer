@@ -143,3 +143,15 @@ chroma_db/
 .env
 secrets.json
 config.json
+
+# Test artifacts and coverage reports
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+.coverage.*
+*.cover
+.hypothesis/
+.tox/
+tests/__pycache__/
+tests/.pytest_cache/

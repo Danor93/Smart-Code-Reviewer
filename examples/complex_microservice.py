@@ -7,16 +7,17 @@ for comprehensive code review testing.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-from enum import Enum
-import time
-import threading
-from concurrent.futures import ThreadPoolExecutor
-import requests
-import redis
 import sqlite3
+import threading
+import time
+from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+import redis
+import requests
 
 # ISSUE: Missing proper configuration management
 REDIS_URL = "redis://localhost:6379/0"
@@ -113,9 +114,7 @@ class DatabaseManager:
                 (
                     order.id,
                     order.customer_id,
-                    json.dumps(
-                        order.items
-                    ),  # ISSUE: No validation of JSON serialization
+                    json.dumps(order.items),  # ISSUE: No validation of JSON serialization
                     order.total_amount,
                     order.status.value,
                     order.created_at,
@@ -181,9 +180,7 @@ class OrderService:
         self.payment_gateway = payment_gateway
         # ISSUE: No proper resource cleanup mechanisms
 
-    async def create_order(
-        self, customer_id: str, items: List[Dict[str, Any]], card_token: str
-    ) -> Optional[Order]:
+    async def create_order(self, customer_id: str, items: List[Dict[str, Any]], card_token: str) -> Optional[Order]:
         """Create a new order with payment processing"""
 
         # ISSUE: No input validation
@@ -207,9 +204,7 @@ class OrderService:
             self.db_manager.save_order(order)
 
             # ISSUE: No idempotency handling
-            payment_success = await self.payment_gateway.process_payment(
-                total_amount, card_token
-            )
+            payment_success = await self.payment_gateway.process_payment(total_amount, card_token)
 
             if payment_success:
                 order.status = OrderStatus.COMPLETED
@@ -227,7 +222,7 @@ class OrderService:
             order.status = OrderStatus.FAILED
             try:
                 self.db_manager.save_order(order)
-            except:
+            except Exception:
                 pass  # ISSUE: Silent failure
             return None
 
@@ -252,9 +247,7 @@ class OrderProcessorWorker:
     def __init__(self, order_service: OrderService):
         self.order_service = order_service
         self.running = False
-        self.thread_pool = ThreadPoolExecutor(
-            max_workers=5
-        )  # ISSUE: Fixed thread count
+        self.thread_pool = ThreadPoolExecutor(max_workers=5)  # ISSUE: Fixed thread count
 
     def start(self):
         self.running = True
@@ -292,7 +285,7 @@ global_metrics = {
 
 def update_metrics(metric_name: str, increment: int = 1):
     # ISSUE: Not thread-safe
-    global global_metrics
+    global global_metrics  # noqa: F824
     global_metrics[metric_name] += increment
 
 
@@ -357,9 +350,7 @@ if __name__ == "__main__":
             {"name": "Widget B", "price": 15.50, "quantity": 1},
         ]
 
-        order = await order_service.create_order(
-            customer_id="cust_123", items=test_items, card_token="tok_visa"
-        )
+        order = await order_service.create_order(customer_id="cust_123", items=test_items, card_token="tok_visa")
 
         if order:
             print(f"Order created: {order.id}")

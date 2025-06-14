@@ -6,18 +6,18 @@ code review operations, including RAG searches, traditional reviews,
 and guideline lookups.
 """
 
-import os
+import asyncio
 import json
 import logging
-from typing import List, Dict, Any, Optional
-import asyncio
-from pydantic import BaseModel, Field
+import os
+from typing import Any, Dict, List, Optional
 
 from langchain.tools import Tool
 from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 
-from reviewers.rag_code_reviewer import RAGCodeReviewer
 from reviewers.code_reviewer import EnhancedCodeReviewer
+from reviewers.rag_code_reviewer import RAGCodeReviewer
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,7 @@ class SearchInput(BaseModel):
 
 
 @tool("rag_code_review", args_schema=CodeInput)
-def rag_code_review(
-    code: str, language: str = "python", model_id: str = "gpt-4"
-) -> str:
+def rag_code_review(code: str, language: str = "python", model_id: str = "gpt-4") -> str:
     """
     Perform RAG-enhanced code review using coding guidelines and best practices.
 
@@ -84,18 +82,14 @@ def rag_code_review(
         asyncio.set_event_loop(loop)
 
         try:
-            result = loop.run_until_complete(
-                reviewer.review_code_with_rag(code, language, model_id)
-            )
+            result = loop.run_until_complete(reviewer.review_code_with_rag(code, language, model_id))
 
             return json.dumps(
                 {
                     "review_type": "rag_enhanced",
                     "rating": result.rating,
                     "issues": [issue.to_dict() for issue in result.issues],
-                    "suggestions": [
-                        suggestion.to_dict() for suggestion in result.suggestions
-                    ],
+                    "suggestions": [suggestion.to_dict() for suggestion in result.suggestions],
                     "reasoning": result.reasoning,
                     "rag_context": result.rag_context,
                     "model_used": result.model_used,
@@ -108,15 +102,11 @@ def rag_code_review(
 
     except Exception as e:
         logger.error(f"Error in RAG code review: {str(e)}")
-        return json.dumps(
-            {"error": f"RAG review failed: {str(e)}", "fallback_available": True}
-        )
+        return json.dumps({"error": f"RAG review failed: {str(e)}", "fallback_available": True})
 
 
 @tool("traditional_code_review", args_schema=CodeInput)
-def traditional_code_review(
-    code: str, language: str = "python", model_id: str = "gpt-4"
-) -> str:
+def traditional_code_review(code: str, language: str = "python", model_id: str = "gpt-4") -> str:
     """
     Perform traditional code review without RAG enhancement.
 
@@ -138,18 +128,14 @@ def traditional_code_review(
         asyncio.set_event_loop(loop)
 
         try:
-            result = loop.run_until_complete(
-                reviewer.review_code_async(code, language, "zero_shot", model_id)
-            )
+            result = loop.run_until_complete(reviewer.review_code_async(code, language, "zero_shot", model_id))
 
             return json.dumps(
                 {
                     "review_type": "traditional",
                     "rating": result.rating,
                     "issues": [issue.to_dict() for issue in result.issues],
-                    "suggestions": [
-                        suggestion.to_dict() for suggestion in result.suggestions
-                    ],
+                    "suggestions": [suggestion.to_dict() for suggestion in result.suggestions],
                     "reasoning": result.reasoning,
                     "model_used": result.model_used,
                     "timestamp": result.timestamp.isoformat(),
@@ -187,9 +173,7 @@ def search_guidelines(query: str, category: Optional[str] = None, k: int = 3) ->
         asyncio.set_event_loop(loop)
 
         try:
-            results = loop.run_until_complete(
-                reviewer.search_guidelines(query, category, k)
-            )
+            results = loop.run_until_complete(reviewer.search_guidelines(query, category, k))
 
             return json.dumps(
                 {
@@ -205,15 +189,11 @@ def search_guidelines(query: str, category: Optional[str] = None, k: int = 3) ->
 
     except Exception as e:
         logger.error(f"Error searching guidelines: {str(e)}")
-        return json.dumps(
-            {"error": f"Guidelines search failed: {str(e)}", "query": query}
-        )
+        return json.dumps({"error": f"Guidelines search failed: {str(e)}", "query": query})
 
 
 @tool("compare_review_approaches")
-def compare_review_approaches(
-    code: str, language: str = "python", model_id: str = "gpt-4"
-) -> str:
+def compare_review_approaches(code: str, language: str = "python", model_id: str = "gpt-4") -> str:
     """
     Compare RAG-enhanced vs traditional code review approaches.
 
@@ -235,9 +215,7 @@ def compare_review_approaches(
         asyncio.set_event_loop(loop)
 
         try:
-            comparison = loop.run_until_complete(
-                reviewer.compare_rag_vs_traditional(code, language, model_id)
-            )
+            comparison = loop.run_until_complete(reviewer.compare_rag_vs_traditional(code, language, model_id))
 
             return json.dumps(comparison, indent=2)
         finally:

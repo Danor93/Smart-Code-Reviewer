@@ -4,10 +4,10 @@ Enhanced Smart Code Reviewer with LangChain Integration
 Supports multiple LLM providers with dynamic loading and async execution
 """
 
-import os
-import sys
 import asyncio
 import logging
+import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -123,9 +123,7 @@ print("Password strength:", strength)
     for technique, description in techniques:
         print(f"\n🎯 {description}")
         try:
-            result = await reviewer.review_code_async(
-                test_code, "python", technique, first_model
-            )
+            result = await reviewer.review_code_async(test_code, "python", technique, first_model)
 
             print(f"Rating: {result.rating}")
             print(f"Model: {result.model_used} ({result.provider})")
@@ -144,14 +142,10 @@ print("Password strength:", strength)
         print(f"\n🔄 Comparing Multiple Models (Zero-Shot)")
         print("-" * 50)
 
-        comparison = await reviewer.compare_models_async(
-            test_code, "python", "zero_shot"
-        )
+        comparison = await reviewer.compare_models_async(test_code, "python", "zero_shot")
 
         for model_id, result in comparison.items():
-            print(
-                f"{model_id}: {result.rating} ({len(result.issues)} issues, {result.execution_time:.2f}s)"
-            )
+            print(f"{model_id}: {result.rating} ({len(result.issues)} issues, {result.execution_time:.2f}s)")
 
 
 if __name__ == "__main__":

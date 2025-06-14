@@ -84,13 +84,42 @@ curl -X POST http://localhost:8080/rag/compare \
   -d '{"code": "def test(): pass", "language": "python"}'
 ```
 
+## 🧪 Testing & Quality Assurance
+
+**Comprehensive test suite with 50+ tests and automated CI/CD pipeline:**
+
+```bash
+# Run all tests
+make test
+
+# Run specific test types
+python tests/run_tests.py --unit        # Unit tests (50 tests)
+python tests/run_tests.py --api         # API endpoint tests
+python tests/run_tests.py --integration # Integration tests
+python tests/run_tests.py --coverage    # Coverage report
+
+# Code quality checks
+make lint    # Black, isort, flake8
+make format  # Auto-format code
+```
+
+**Test Coverage:**
+
+- ✅ **Unit Tests** - Core functionality (90%+ coverage)
+- ✅ **API Tests** - All endpoints tested
+- ✅ **Integration Tests** - RAG & Agent workflows
+- ✅ **Security Scans** - Bandit security analysis
+- ✅ **Code Quality** - Black, isort, flake8 linting
+- ✅ **GitHub Actions** - Automated CI/CD pipeline
+
 ## 🎓 Learning Achievements
 
 **✅ Day 1**: LLM Integration & Prompt Engineering  
 **✅ Day 2**: RAG & Vector Databases (ChromaDB)  
 **✅ Day 3-4**: Advanced RAG Implementation & Knowledge Base  
-**✅ Day 5-6**: LangChain, LangGraph & AI Agents (NEW!)  
-**🚀 Day 7+**: Production-Ready Autonomous Systems
+**✅ Day 5-6**: LangChain, LangGraph & AI Agents  
+**✅ Day 7**: Comprehensive Testing & CI/CD Pipeline  
+**🚀 Day 8+**: Production-Ready Autonomous Systems
 
 ## 📖 Documentation
 
@@ -99,25 +128,11 @@ curl -X POST http://localhost:8080/rag/compare \
 - **🔧 [Troubleshooting](INSTALL.md#troubleshooting)** - Common issues and solutions
 - **🔑 [API Keys](INSTALL.md#getting-api-keys)** - Provider setup guide
 
-## 🧪 Testing
-
-```bash
-# Run RAG tests
-python tests/test_rag.py
-
-# Test Docker build and deployment
-docker build -t smart-code-reviewer:test .
-docker run --rm -d --name test -p 8080:5000 -e OPENAI_API_KEY="${OPENAI_API_KEY}" smart-code-reviewer:test
-curl http://localhost:8080/rag/knowledge-base/stats
-docker stop test
-```
-
 ## 🏗️ Project Structure
 
 ```tree
 smart-code-reviewer/
 ├── agents/                          # 🤖 AI Agent System
-│   ├── __init__.py                  # Agent module exports
 │   ├── code_review_agent.py         # Autonomous LangGraph agent with ReAct pattern
 │   ├── tools.py                     # Agent tools
 │   └── README.md                    # Comprehensive agent documentation
@@ -150,10 +165,19 @@ smart-code-reviewer/
 │   ├── async_web_crawler.py         # Async programming
 │   ├── blockchain_simulation.py     # Complex algorithms
 │   └── complex_microservice.py      # Microservice architecture
-├── tests/                           # Test scripts and utilities
-│   ├── test_imports.py              # Basic import verification
-│   ├── test_rag.py                  # RAG functionality testing
-│   └── test_agent.py                # AI Agent functionality testing
+├── tests/                           # 🧪 Comprehensive Test Suite
+│   ├── unit/                        # Unit tests (50+ tests)
+│   │   ├── test_api.py              # API endpoint tests
+│   │   ├── test_data_models.py      # Data model tests
+│   │   └── test_model_registry.py   # Model registry tests
+│   ├── integration/                 # Integration tests
+│   │   ├── test_agent.py            # AI Agent workflow tests
+│   │   └── test_rag.py              # RAG functionality tests
+│   ├── run_tests.py                 # Test runner with coverage
+│   ├── check_coverage.py            # Coverage analysis tool
+│   └── test_imports.py              # Import verification
+├── .github/workflows/               # CI/CD Pipeline
+│   └── tests.yml                    # Automated testing workflow
 ├── logs/                            # Application logs (created at runtime)
 ├── results/                         # Review results output directory
 ├── chroma_db/                       # ChromaDB vector database (created at runtime)
@@ -162,6 +186,10 @@ smart-code-reviewer/
 ├── enhanced_code_reviewer.py        # Command-line application entry point
 ├── models_config.yaml               # AI model configurations
 ├── requirements.txt                 # Python dependencies
+├── pytest.ini                      # Pytest configuration
+├── .flake8                          # Flake8 linting configuration
+├── pyproject.toml                   # Black & isort configuration
+├── Makefile                         # Build and test automation
 ├── Dockerfile                       # Docker container configuration
 ├── docker-compose.yml               # Multi-container Docker setup
 ├── docker-run.sh                    # Docker management script

@@ -5,18 +5,19 @@ This module extends the EnhancedCodeReviewer with Retrieval-Augmented Generation
 capabilities, using relevant coding guidelines and best practices to enhance reviews.
 """
 
-import os
 import json
 import logging
-from typing import List, Dict, Any, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.prompts import PromptTemplate
+from langchain_core.messages import HumanMessage, SystemMessage
 
-from .code_reviewer import EnhancedCodeReviewer
 from models.data_models import ReviewResult
 from rag import DocumentLoader, VectorStore
+
+from .code_reviewer import EnhancedCodeReviewer
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +86,7 @@ Focus on issues and improvements that are specifically supported by the provided
 If the code follows best practices mentioned in the guidelines, acknowledge this in your review.
 """
 
-        self.rag_prompt = PromptTemplate(
-            template=self.rag_template, input_variables=["context", "code", "language"]
-        )
+        self.rag_prompt = PromptTemplate(template=self.rag_template, input_variables=["context", "code", "language"])
 
         logger.info("RAG chain setup completed")
 
@@ -150,53 +149,37 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
             # Ensure RAG is initialized
             if not self.rag_initialized:
                 if not await self.initialize_rag():
-                    logger.warning(
-                        "RAG not available, falling back to traditional review"
-                    )
-                    return await self.review_code_async(
-                        code, language, "zero_shot", model_id
-                    )
+                    logger.warning("RAG not available, falling back to traditional review")
+                    return await self.review_code_async(code, language, "zero_shot", model_id)
 
             # Create search query based on code content and language
             search_query = self._create_search_query(code, language)
 
             # Retrieve relevant guidelines
-            relevant_docs = await self.vector_store.similarity_search(
-                search_query, k=num_guidelines
-            )
+            relevant_docs = await self.vector_store.similarity_search(search_query, k=num_guidelines)
 
             if not relevant_docs:
-                logger.warning(
-                    "No relevant guidelines found, falling back to traditional review"
-                )
-                return await self.review_code_async(
-                    code, language, "zero_shot", model_id
-                )
+                logger.warning("No relevant guidelines found, falling back to traditional review")
+                return await self.review_code_async(code, language, "zero_shot", model_id)
 
             # Build context from retrieved documents
             context = self._build_context(relevant_docs)
 
             # Create RAG-enhanced prompt
-            enhanced_prompt = self.rag_prompt.format(
-                context=context, code=code, language=language
-            )
+            enhanced_prompt = self.rag_prompt.format(context=context, code=code, language=language)
 
             # Get model and perform review
             model = self.model_registry.create_model(model_id or "gpt-4")
 
             messages = [
-                SystemMessage(
-                    content="You are an expert code reviewer with access to comprehensive coding guidelines."
-                ),
+                SystemMessage(content="You are an expert code reviewer with access to comprehensive coding guidelines."),
                 HumanMessage(content=enhanced_prompt),
             ]
 
             response = await model.ainvoke(messages)
 
             # Parse and enhance the result
-            result = self._parse_rag_review_result(
-                response.content, model_id, relevant_docs
-            )
+            result = self._parse_rag_review_result(response.content, model_id, relevant_docs)
 
             logger.info(f"RAG review completed using {len(relevant_docs)} guidelines")
             return result
@@ -263,16 +246,12 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
             title = metadata.get("title", "Guidelines")
 
             # Format document content
-            context_part = (
-                f"## Guideline {i}: {title} ({category})\n{doc.page_content}\n"
-            )
+            context_part = f"## Guideline {i}: {title} ({category})\n{doc.page_content}\n"
             context_parts.append(context_part)
 
         return "\n".join(context_parts)
 
-    def _parse_rag_review_result(
-        self, response_content: str, model_id: str, relevant_docs: List
-    ) -> ReviewResult:
+    def _parse_rag_review_result(self, response_content: str, model_id: str, relevant_docs: List) -> ReviewResult:
         """
         Parse RAG-enhanced review result with additional metadata.
 
@@ -301,13 +280,9 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
 
             # Add RAG-specific metadata
             result.guidelines_used = review_data.get("guidelines_used", [])
-            result.rag_context_quality = review_data.get(
-                "rag_context_quality", "medium"
-            )
+            result.rag_context_quality = review_data.get("rag_context_quality", "medium")
             result.num_guidelines = len(relevant_docs)
-            result.guideline_categories = list(
-                set(doc.metadata.get("category", "general") for doc in relevant_docs)
-            )
+            result.guideline_categories = list(set(doc.metadata.get("category", "general") for doc in relevant_docs))
 
             return result
 
@@ -330,9 +305,7 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
                 timestamp=datetime.now().isoformat(),
             )
 
-    async def compare_rag_vs_traditional(
-        self, code: str, language: str = "python", model_id: str = None
-    ) -> Dict[str, Any]:
+    async def compare_rag_vs_traditional(self, code: str, language: str = "python", model_id: str = None) -> Dict[str, Any]:
         """
         Compare RAG-enhanced vs traditional review for the same code.
 
@@ -346,9 +319,7 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
         """
         try:
             # Perform both types of reviews
-            traditional_result = await self.review_code_async(
-                code, language, "zero_shot", model_id
-            )
+            traditional_result = await self.review_code_async(code, language, "zero_shot", model_id)
             rag_result = await self.review_code_with_rag(code, language, model_id)
 
             # Calculate comparison metrics
@@ -357,16 +328,10 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
                 "rag_enhanced_review": rag_result.__dict__,
                 "comparison": {
                     "guidelines_referenced": getattr(rag_result, "num_guidelines", 0),
-                    "context_quality": getattr(
-                        rag_result, "rag_context_quality", "none"
-                    ),
-                    "additional_issues_found": len(rag_result.issues)
-                    - len(traditional_result.issues),
-                    "additional_suggestions": len(rag_result.suggestions)
-                    - len(traditional_result.suggestions),
-                    "guideline_categories": getattr(
-                        rag_result, "guideline_categories", []
-                    ),
+                    "context_quality": getattr(rag_result, "rag_context_quality", "none"),
+                    "additional_issues_found": len(rag_result.issues) - len(traditional_result.issues),
+                    "additional_suggestions": len(rag_result.suggestions) - len(traditional_result.suggestions),
+                    "guideline_categories": getattr(rag_result, "guideline_categories", []),
                 },
             }
 
@@ -377,9 +342,7 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
             logger.error(f"Error in comparison: {str(e)}")
             return {"error": str(e)}
 
-    async def search_guidelines(
-        self, query: str, category: Optional[str] = None, k: int = 5
-    ) -> List[Dict[str, Any]]:
+    async def search_guidelines(self, query: str, category: Optional[str] = None, k: int = 5) -> List[Dict[str, Any]]:
         """
         Search the guidelines database.
 
@@ -458,9 +421,7 @@ If the code follows best practices mentioned in the guidelines, acknowledge this
             success = await self.vector_store.update_vectorstore(documents)
             if success:
                 self.rag_initialized = True
-                logger.info(
-                    f"Knowledge base refreshed with {len(documents)} document chunks"
-                )
+                logger.info(f"Knowledge base refreshed with {len(documents)} document chunks")
                 return True
             else:
                 logger.error("Failed to refresh knowledge base")

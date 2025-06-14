@@ -2,18 +2,18 @@
 Enhanced code reviewer with LangChain and multi-model support
 """
 
-import json
-import time
 import asyncio
+import json
 import logging
+import time
 from typing import Dict
 
 # LangChain imports
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from models.data_models import ReviewResult
-from providers.model_registry import ModelRegistry
 from prompts.templates import EnhancedPromptTemplates
+from providers.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +39,7 @@ class EnhancedCodeReviewer:
             # Get model configuration
             if model_id not in self.model_registry.models:
                 available = list(self.model_registry.get_available_models().keys())
-                raise ValueError(
-                    f"Model {model_id} not available. Available: {available}"
-                )
+                raise ValueError(f"Model {model_id} not available. Available: {available}")
 
             model_config = self.model_registry.models[model_id]
 
@@ -50,13 +48,9 @@ class EnhancedCodeReviewer:
 
             # Select prompt template
             if technique == "zero_shot":
-                prompt = self.templates.ZERO_SHOT_REVIEW.format(
-                    language=language, code=code
-                )
+                prompt = self.templates.ZERO_SHOT_REVIEW.format(language=language, code=code)
             elif technique == "few_shot":
-                prompt = self.templates.FEW_SHOT_REVIEW.format(
-                    language=language, code=code
-                )
+                prompt = self.templates.FEW_SHOT_REVIEW.format(language=language, code=code)
             elif technique == "cot":
                 prompt = self.templates.COT_REVIEW.format(language=language, code=code)
             else:

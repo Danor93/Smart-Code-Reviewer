@@ -5,14 +5,14 @@ This module handles loading and chunking of coding guidelines and best practices
 documents for vector storage and retrieval.
 """
 
-import os
 import logging
-from typing import List, Optional
+import os
 from pathlib import Path
+from typing import List, Optional
 
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
 
 logger = logging.getLogger(__name__)
 
@@ -91,11 +91,7 @@ class DocumentLoader:
         file_path = Path(doc.metadata.get("source", ""))
 
         # Extract category from directory structure
-        relative_path = (
-            file_path.relative_to(self.docs_path)
-            if self.docs_path in file_path.parents
-            else file_path
-        )
+        relative_path = file_path.relative_to(self.docs_path) if self.docs_path in file_path.parents else file_path
         category = relative_path.parts[0] if relative_path.parts else "general"
 
         # Add enhanced metadata
@@ -187,9 +183,7 @@ class DocumentLoader:
             return []
 
         try:
-            loader = DirectoryLoader(
-                str(category_path), glob="*.md", loader_cls=TextLoader
-            )
+            loader = DirectoryLoader(str(category_path), glob="*.md", loader_cls=TextLoader)
 
             documents = loader.load()
             for doc in documents:

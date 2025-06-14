@@ -5,21 +5,22 @@ for comprehensive code review testing.
 """
 
 import asyncio
-import aiohttp
-import aiofiles
-from typing import Dict, List, Set, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from urllib.parse import urljoin, urlparse
-import time
+import hashlib
 import json
 import logging
-from collections import defaultdict
-import re
-import hashlib
 import os
-from datetime import datetime, timedelta
+import re
 import ssl
+import time
 import weakref
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import urljoin, urlparse
+
+import aiofiles
+import aiohttp
 
 # ISSUE: Hardcoded configuration
 MAX_CONCURRENT_REQUESTS = 50  # ISSUE: May overwhelm target servers
@@ -68,9 +69,7 @@ class RateLimiter:
 
         # Remove old requests
         cutoff = now - self.time_window
-        domain_requests[:] = [
-            req_time for req_time in domain_requests if req_time > cutoff
-        ]
+        domain_requests[:] = [req_time for req_time in domain_requests if req_time > cutoff]
 
         if len(domain_requests) >= self.max_requests:
             return False
@@ -128,9 +127,7 @@ class ContentProcessor:
     def __init__(self):
         # ISSUE: Regex compiled repeatedly
         self.link_pattern = re.compile(r'href=[\'"]?([^\'" >]+)', re.IGNORECASE)
-        self.email_pattern = re.compile(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-        )
+        self.email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
     def extract_links(self, content: str, base_url: str) -> List[str]:
         """Extract links from HTML content"""
@@ -200,16 +197,12 @@ class AsyncWebCrawler:
             # ISSUE: No proper headers for politeness
         }
 
-        session = aiohttp.ClientSession(
-            connector=connector, timeout=timeout, headers=headers
-        )
+        session = aiohttp.ClientSession(connector=connector, timeout=timeout, headers=headers)
 
         self.active_sessions.add(session)
         return session
 
-    async def fetch_url(
-        self, session: aiohttp.ClientSession, url: str, depth: int
-    ) -> Optional[CrawlResult]:
+    async def fetch_url(self, session: aiohttp.ClientSession, url: str, depth: int) -> Optional[CrawlResult]:
         """Fetch a single URL with retry logic"""
 
         domain = urlparse(url).netloc
@@ -238,9 +231,7 @@ class AsyncWebCrawler:
                         if response.status == 200:
                             # Extract links for further crawling
                             if depth < self.max_depth:
-                                links = self.content_processor.extract_links(
-                                    content, url
-                                )
+                                links = self.content_processor.extract_links(content, url)
                                 result.links_found = links
 
                                 # ISSUE: No filtering of link types (images, css, js)
@@ -376,10 +367,7 @@ class AsyncWebCrawler:
 
         try:
             # Start workers
-            workers = [
-                asyncio.create_task(self.worker(self.session, i))
-                for i in range(num_workers)
-            ]
+            workers = [asyncio.create_task(self.worker(self.session, i)) for i in range(num_workers)]
 
             # Start progress monitor
             monitor_task = asyncio.create_task(self.monitor_progress())
@@ -428,9 +416,7 @@ class CrawlerManager:
     async def run_crawl_session(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Run a complete crawl session"""
 
-        crawler = AsyncWebCrawler(
-            start_urls=config["start_urls"], max_depth=config.get("max_depth", 3)
-        )
+        crawler = AsyncWebCrawler(start_urls=config["start_urls"], max_depth=config.get("max_depth", 3))
 
         self.active_crawlers.append(crawler)  # ISSUE: Memory leak
 
@@ -449,11 +435,7 @@ class CrawlerManager:
                 "failed_urls": len([r for r in results if r.error]),
                 "total_bytes": sum(r.content_length for r in results),
                 "duration": time.time() - start_time,
-                "average_response_time": (
-                    sum(r.response_time for r in results) / len(results)
-                    if results
-                    else 0
-                ),
+                "average_response_time": (sum(r.response_time for r in results) / len(results) if results else 0),
             }
 
             return session_stats
@@ -471,9 +453,7 @@ async def main():
     """Main function with multiple issues"""
 
     # ISSUE: No proper logging configuration
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
     manager = CrawlerManager()
 

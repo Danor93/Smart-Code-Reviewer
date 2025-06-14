@@ -5,21 +5,22 @@ This module implements a LangGraph-based AI agent that can autonomously
 perform code review tasks using multiple tools and reasoning patterns.
 """
 
-import os
 import json
 import logging
-from typing import Dict, Any, List, Optional, TypedDict, Annotated
+import os
 from datetime import datetime
+from typing import Annotated, Any, Dict, List, Optional, TypedDict
 
-from langgraph.graph import StateGraph, END, START
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langgraph.graph import END, START, StateGraph
+from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
-from .tools import AgentTools
 from providers.model_registry import ModelRegistry
+
+from .tools import AgentTools
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +89,7 @@ class CodeReviewAgent:
             # Use the existing model registry
             return self.model_registry.create_model(model_id)
         except Exception as e:
-            logger.warning(
-                f"Failed to create model {model_id}, falling back to GPT-4: {str(e)}"
-            )
+            logger.warning(f"Failed to create model {model_id}, falling back to GPT-4: {str(e)}")
             return ChatOpenAI(
                 model="gpt-4",
                 temperature=0.1,
@@ -215,9 +214,7 @@ class CodeReviewAgent:
             action = self._parse_action(response.content)
 
             state["messages"] = messages + [response]
-            state[
-                "reasoning"
-            ] += f"\n\nIteration {state['iteration_count']}: {response.content}"
+            state["reasoning"] += f"\n\nIteration {state['iteration_count']}: {response.content}"
             state["next_action"] = action
             state["iteration_count"] += 1
 
@@ -276,9 +273,7 @@ class CodeReviewAgent:
             """
 
             messages = [
-                SystemMessage(
-                    content="You are an expert code reviewer providing final comprehensive analysis."
-                ),
+                SystemMessage(content="You are an expert code reviewer providing final comprehensive analysis."),
                 HumanMessage(content=synthesis_prompt),
             ]
 
@@ -304,9 +299,7 @@ class CodeReviewAgent:
         ]
 
         if state.get("analysis_results"):
-            context_parts.append(
-                f"Previous Results: {len(state['analysis_results'])} tool executions"
-            )
+            context_parts.append(f"Previous Results: {len(state['analysis_results'])} tool executions")
 
         return "\n".join(context_parts)
 
