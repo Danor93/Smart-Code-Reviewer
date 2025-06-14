@@ -26,6 +26,14 @@ curl http://localhost:8080/rag/knowledge-base/stats
 - **Contextual Suggestions** - Recommendations based on established standards
 - **Comparative Analytics** - Side-by-side RAG vs traditional analysis
 
+### 🤖 **AI Agent System**
+
+- **Autonomous Code Review** - Self-directing AI agent with ReAct pattern
+- **Multi-Tool Coordination** - RAG search, traditional review, guidelines lookup
+- **LangGraph Workflow** - Complex state machine orchestration
+- **Intelligent Reasoning** - Multi-step decision making and iteration
+- **Professional Reports** - Comprehensive analysis with executive summaries
+
 ### 🤖 **Multi-Model Support**
 
 - **OpenAI** (GPT-4, GPT-3.5)
@@ -59,6 +67,17 @@ curl -X POST http://localhost:8080/rag/review-custom \
   -H "Content-Type: application/json" \
   -d '{"code": "password = \"admin123\"", "language": "python"}'
 
+# 🤖 NEW: Autonomous AI Agent Review
+curl -X POST http://localhost:8080/agent/review \
+  -H "Content-Type: application/json" \
+  -d '{"code": "def divide(a, b): return a / b", "language": "python", "user_request": "Focus on error handling"}'
+
+# Agent capabilities and info
+curl http://localhost:8080/agent/info
+
+# Agent review of example file
+curl http://localhost:8080/agent/review/vulnerable_code.py
+
 # Compare approaches
 curl -X POST http://localhost:8080/rag/compare \
   -H "Content-Type: application/json" \
@@ -69,7 +88,9 @@ curl -X POST http://localhost:8080/rag/compare \
 
 **✅ Day 1**: LLM Integration & Prompt Engineering  
 **✅ Day 2**: RAG & Vector Databases (ChromaDB)  
-**🔄 Day 3**: LangChain & AI Agents (Coming Next)
+**✅ Day 3-4**: Advanced RAG Implementation & Knowledge Base  
+**✅ Day 5-6**: LangChain, LangGraph & AI Agents (NEW!)  
+**🚀 Day 7+**: Production-Ready Autonomous Systems
 
 ## 📖 Documentation
 
@@ -95,6 +116,11 @@ docker stop test
 
 ```tree
 smart-code-reviewer/
+├── agents/                          # 🤖 AI Agent System
+│   ├── __init__.py                  # Agent module exports
+│   ├── code_review_agent.py         # Autonomous LangGraph agent with ReAct pattern
+│   ├── tools.py                     # Agent tools
+│   └── README.md                    # Comprehensive agent documentation
 ├── models/                          # Data models and structures
 │   └── data_models.py               # ReviewResult, RAGContext, ComparisonResult
 ├── providers/                       # LLM provider integrations
@@ -126,7 +152,8 @@ smart-code-reviewer/
 │   └── complex_microservice.py      # Microservice architecture
 ├── tests/                           # Test scripts and utilities
 │   ├── test_imports.py              # Basic import verification
-│   └── test_rag.py                  # RAG functionality testing
+│   ├── test_rag.py                  # RAG functionality testing
+│   └── test_agent.py                # AI Agent functionality testing
 ├── logs/                            # Application logs (created at runtime)
 ├── results/                         # Review results output directory
 ├── chroma_db/                       # ChromaDB vector database (created at runtime)

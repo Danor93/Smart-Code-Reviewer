@@ -27,14 +27,6 @@ The **Smart Code Reviewer AI Agent** is an autonomous system that performs intel
 5. **Adaptive Workflow**: Adjusts its approach based on code complexity and user requirements
 6. **Professional Reporting**: Generates comprehensive, structured review reports
 
-### What Makes It Special
-
-- **Truly Autonomous**: No human intervention needed during the review process
-- **Context-Aware**: Uses RAG to provide reviews based on established coding standards
-- **Multi-Step Reasoning**: Can iterate through multiple analysis approaches
-- **Production-Ready**: Includes error handling, logging, and monitoring
-- **Extensible**: Easy to add new tools and capabilities
-
 ## 🛠️ Libraries and Technologies
 
 ### Core AI/ML Framework
