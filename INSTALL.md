@@ -126,6 +126,13 @@ pip install -r requirements.txt
 
 # Verify installation
 pip list | grep langchain  # Should show LangChain packages
+pip list | grep langgraph  # Should show LangGraph package (NEW for agents)
+
+# Key agent dependencies (automatically installed via requirements.txt)
+# langgraph>=0.2.55          # State machine orchestration for AI agents
+# langchain-core>=0.3.29     # Core LangChain functionality
+# langchain-experimental>=0.3.30  # Experimental agent features
+# pydantic>=2.0.0            # Data validation for agent state
 ```
 
 ### 4. Setup Environment Variables
@@ -194,14 +201,18 @@ python app.py
 
 ### API Endpoints
 
-| Endpoint             | Method | Description                            |
-| -------------------- | ------ | -------------------------------------- |
-| `/`                  | GET    | API information and health check       |
-| `/models`            | GET    | List available AI models               |
-| `/files`             | GET    | List available example files           |
-| `/review/<filename>` | GET    | Review specific file from examples     |
-| `/review-all`        | GET    | Review all files in examples directory |
-| `/review-custom`     | POST   | Review custom code                     |
+| Endpoint                   | Method | Description                              |
+| -------------------------- | ------ | ---------------------------------------- |
+| `/`                        | GET    | API information and health check         |
+| `/models`                  | GET    | List available AI models                 |
+| `/files`                   | GET    | List available example files             |
+| `/review/<filename>`       | GET    | Review specific file from examples       |
+| `/review-all`              | GET    | Review all files in examples directory   |
+| `/review-custom`           | POST   | Review custom code                       |
+| **🤖 AI Agent Endpoints**  |        | **NEW: Autonomous Agent System**         |
+| `/agent/info`              | GET    | Get agent capabilities and configuration |
+| `/agent/review`            | POST   | Autonomous agent code review             |
+| `/agent/review/<filename>` | GET    | Agent review of example file             |
 
 ### API Usage Examples
 
@@ -230,6 +241,22 @@ curl -X POST http://localhost:8080/review-custom \
     "model": "gpt-4",
     "language": "python"
   }'
+
+# 🤖 NEW: AI Agent Endpoints
+# Get agent capabilities
+curl http://localhost:8080/agent/info
+
+# Autonomous agent review (POST)
+curl -X POST http://localhost:8080/agent/review \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "def divide(a, b): return a / b",
+    "language": "python",
+    "user_request": "Check for potential runtime errors"
+  }'
+
+# Agent review of example file
+curl http://localhost:8080/agent/review/vulnerable_code.py
 ```
 
 ## Getting API Keys
@@ -293,6 +320,11 @@ DEFAULT_MODEL=gpt-4
 DEFAULT_TECHNIQUE=zero_shot
 MAX_TOKENS=1000
 TEMPERATURE=0.1
+
+# 🤖 NEW: AI Agent Configuration
+MAX_AGENT_ITERATIONS=5      # Maximum reasoning iterations for agent
+AGENT_DEFAULT_MODEL=gpt-4   # Default model for agent workflows
+AGENT_TIMEOUT=300          # Agent timeout in seconds
 ```
 
 ## Usage Examples
@@ -368,6 +400,29 @@ for model_id, result in comparison.items():
     print(f"{model_id}: {result.rating} ({result.execution_time:.2f}s)")
 ```
 
+### 🤖 AI Agent Usage (NEW!)
+
+```python
+from agents import CodeReviewAgent, CodeReviewRequest
+
+# Initialize autonomous agent
+agent = CodeReviewAgent(model_id="gpt-4")
+
+# Create review request
+request = CodeReviewRequest(
+    code="def divide(a, b): return a / b",
+    language="python",
+    user_request="Focus on error handling and potential runtime issues"
+)
+
+# Run autonomous review (agent will reason, use tools, and synthesize)
+result = await agent.review_code(request)
+
+print(f"Agent completed {result['agent_analysis']['iterations']} reasoning iterations")
+print(f"Tools used: {result['agent_analysis']['tools_used']}")
+print(f"Review: {result['review_results']}")
+```
+
 ### REST API Usage
 
 ```python
@@ -386,6 +441,16 @@ response = requests.post('http://localhost:8080/rag/review-custom', json={
     'code': 'password = "admin123"',
     'language': 'python'
 })
+
+# 🤖 NEW: Autonomous agent review
+response = requests.post('http://localhost:8080/agent/review', json={
+    'code': 'def unsafe_eval(user_input): exec(user_input)',
+    'language': 'python',
+    'user_request': 'Security analysis please'
+})
+
+# Get agent capabilities
+response = requests.get('http://localhost:8080/agent/info')
 
 # Search guidelines
 response = requests.post('http://localhost:8080/rag/search-guidelines', json={
@@ -482,6 +547,52 @@ pip list | grep langchain
 pip install --force-reinstall langchain langchain-openai langchain-anthropic
 ```
 
+### 🤖 AI Agent Issues (NEW!)
+
+**Problem**: Agent import errors
+
+```bash
+# Verify agent dependencies
+pip list | grep langgraph
+pip list | grep pydantic
+
+# Test agent imports
+python -c "from agents import CodeReviewAgent; print('✅ Agent imports work')"
+
+# If missing, reinstall agent dependencies
+pip install --force-reinstall langgraph langchain-core langchain-experimental
+```
+
+**Problem**: Agent workflow timeout or infinite loops
+
+```bash
+# Check agent configuration in .env
+grep AGENT .env
+
+# Set reasonable limits
+export MAX_AGENT_ITERATIONS=3
+export AGENT_TIMEOUT=120
+
+# Test with simpler code first
+curl -X POST http://localhost:8080/agent/review \
+  -H "Content-Type: application/json" \
+  -d '{"code": "print(\"hello\")", "language": "python", "user_request": "quick review"}'
+```
+
+**Problem**: Agent tools not working
+
+```bash
+# Test individual tools
+python -c "
+from agents.tools import rag_code_review
+result = rag_code_review.invoke({'code': 'def test(): pass', 'language': 'python', 'focus': 'general'})
+print('✅ RAG tool works')
+"
+
+# Check RAG system status
+curl http://localhost:8080/rag/knowledge-base/stats
+```
+
 ### API Issues
 
 **Problem**: "No models available" error
@@ -545,9 +656,13 @@ python tests/test_imports.py
 # RAG functionality tests
 python tests/test_rag.py
 
+# 🤖 NEW: AI Agent functionality tests
+python tests/test_agent.py
+
 # Test specific components manually
 python -c "from reviewers import EnhancedCodeReviewer; print('✅ Basic imports work')"
 python -c "from reviewers import RAGCodeReviewer; print('✅ RAG imports work')"
+python -c "from agents import CodeReviewAgent; print('✅ Agent imports work')"
 ```
 
 ### Docker Testing
@@ -562,6 +677,12 @@ docker run --rm -d --name test-container -p 8080:5000 \
 # Test endpoints
 curl http://localhost:8080/
 curl http://localhost:8080/rag/knowledge-base/stats
+
+# 🤖 NEW: Test agent endpoints
+curl http://localhost:8080/agent/info
+curl -X POST http://localhost:8080/agent/review \
+  -H "Content-Type: application/json" \
+  -d '{"code": "def test(): pass", "language": "python", "user_request": "general review"}'
 
 # Clean up
 docker stop test-container

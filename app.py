@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 # Import from refactored modules
 from reviewers import EnhancedCodeReviewer, RAGCodeReviewer
+from agents import CodeReviewAgent, CodeReviewRequest
 
 # Load environment variables
 load_dotenv()
@@ -29,9 +30,10 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Initialize the code reviewers
+# Initialize the code reviewers and agent
 reviewer = EnhancedCodeReviewer()
 rag_reviewer = RAGCodeReviewer()
+code_agent = CodeReviewAgent()
 
 # Configuration
 EXAMPLES_DIR = "examples"
@@ -101,6 +103,9 @@ def home():
                 "/rag/search-guidelines": "Search coding guidelines (POST)",
                 "/rag/knowledge-base/stats": "Get knowledge base statistics",
                 "/rag/knowledge-base/refresh": "Refresh knowledge base (POST)",
+                "/agent/review": "AI Agent autonomous code review (POST)",
+                "/agent/review/{filename}": "AI Agent review file from examples",
+                "/agent/info": "Get AI Agent capabilities and information",
             },
             "available_models": len(available_models),
             "available_files": len(available_files),
@@ -686,6 +691,152 @@ def refresh_knowledge_base():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ============================================================================
+# AI AGENT ENDPOINTS
+# ============================================================================
+
+
+@app.route("/agent/info", methods=["GET"])
+def get_agent_info():
+    """Get information about the AI agent capabilities"""
+    try:
+        agent_info = code_agent.get_agent_info()
+        return jsonify({"success": True, "agent_info": agent_info})
+    except Exception as e:
+        logger.error(f"Error getting agent info: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/agent/review", methods=["POST"])
+def agent_review_custom():
+    """AI Agent autonomous code review for custom code"""
+    try:
+        # Parse request data
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+
+        # Validate required fields
+        if "code" not in data:
+            return (
+                jsonify({"success": False, "error": "Missing required field: code"}),
+                400,
+            )
+
+        # Create request object
+        review_request = CodeReviewRequest(
+            code=data["code"],
+            language=data.get("language", "python"),
+            model_id=data.get("model_id", "gpt-4"),
+            user_request=data.get(
+                "user_request", "Perform a comprehensive code review"
+            ),
+            max_iterations=data.get("max_iterations", 5),
+        )
+
+        # Run async agent review
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            result = loop.run_until_complete(code_agent.review_code(review_request))
+
+            return jsonify(
+                {
+                    "success": True,
+                    "agent_review": result,
+                    "request_info": {
+                        "code_length": len(data["code"]),
+                        "language": review_request.language,
+                        "model_id": review_request.model_id,
+                        "user_request": review_request.user_request,
+                    },
+                }
+            )
+        finally:
+            loop.close()
+
+    except Exception as e:
+        logger.error(f"Error in agent review: {e}")
+        return (
+            jsonify({"success": False, "error": str(e), "type": "agent_review_error"}),
+            500,
+        )
+
+
+@app.route("/agent/review/<filename>", methods=["GET", "POST"])
+def agent_review_file(filename: str):
+    """AI Agent autonomous review of a file from examples directory"""
+    try:
+        # Validate filename
+        if not filename.endswith(".py"):
+            filename += ".py"
+
+        available_files = get_available_files()
+        if filename not in available_files:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"File {filename} not found",
+                        "available_files": available_files,
+                    }
+                ),
+                404,
+            )
+
+        # Read file content
+        code_content = read_file_content(filename)
+
+        # Get parameters
+        model_id = request.args.get("model", "gpt-4")
+        language = request.args.get("language", "python")
+        user_request = request.args.get(
+            "request", f"Perform a comprehensive code review of {filename}"
+        )
+
+        # Create request object
+        review_request = CodeReviewRequest(
+            code=code_content,
+            language=language,
+            model_id=model_id,
+            user_request=user_request,
+        )
+
+        # Run async agent review
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            result = loop.run_until_complete(code_agent.review_code(review_request))
+
+            return jsonify(
+                {
+                    "success": True,
+                    "filename": filename,
+                    "agent_review": result,
+                    "file_info": {
+                        "size": len(code_content),
+                        "lines": len(code_content.splitlines()),
+                        "language": language,
+                    },
+                }
+            )
+        finally:
+            loop.close()
+
+    except FileNotFoundError as e:
+        return jsonify({"success": False, "error": str(e)}), 404
+    except Exception as e:
+        logger.error(f"Error in agent file review: {e}")
+        return (
+            jsonify(
+                {"success": False, "error": str(e), "type": "agent_file_review_error"}
+            ),
+            500,
+        )
+
+
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors"""
@@ -707,6 +858,9 @@ def not_found(error):
                     "/rag/search-guidelines",
                     "/rag/knowledge-base/stats",
                     "/rag/knowledge-base/refresh",
+                    "/agent/info",
+                    "/agent/review",
+                    "/agent/review/<filename>",
                 ],
             }
         ),
@@ -750,6 +904,11 @@ if __name__ == "__main__":
     print("  • POST /rag/search-guidelines      - Search coding guidelines")
     print("  • GET  /rag/knowledge-base/stats   - Knowledge base statistics")
     print("  • POST /rag/knowledge-base/refresh - Refresh knowledge base")
+
+    print("\n🤖 AI Agent Endpoints:")
+    print("  • GET  /agent/info              - Get agent capabilities")
+    print("  • POST /agent/review            - Autonomous code review")
+    print("  • GET  /agent/review/<filename> - Agent review of file")
 
     print(f"\n🔧 Starting server on http://0.0.0.0:5000 (exposed on host port 8080)")
     print("=" * 60)
