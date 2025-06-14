@@ -112,26 +112,23 @@ make format  # Auto-format code
 - ✅ **Code Quality** - Black, isort, flake8 linting
 - ✅ **GitHub Actions** - Automated CI/CD pipeline
 
-## 🎓 Learning Achievements
-
-**✅ Day 1**: LLM Integration & Prompt Engineering  
-**✅ Day 2**: RAG & Vector Databases (ChromaDB)  
-**✅ Day 3-4**: Advanced RAG Implementation & Knowledge Base  
-**✅ Day 5-6**: LangChain, LangGraph & AI Agents  
-**✅ Day 7**: Comprehensive Testing & CI/CD Pipeline  
-**🚀 Day 8+**: Production-Ready Autonomous Systems
-
 ## 📖 Documentation
 
-- **📦 [Installation Guide](INSTALL.md)** - Complete setup instructions
-- **🐳 [Docker Setup](INSTALL.md#docker-installation-recommended)** - Containerized deployment
-- **🔧 [Troubleshooting](INSTALL.md#troubleshooting)** - Common issues and solutions
-- **🔑 [API Keys](INSTALL.md#getting-api-keys)** - Provider setup guide
+- **📚 [Complete Documentation](docs/)** - All project documentation
+- **🏗️ [System Design](docs/SYSTEM_DESIGN.md)** - Architecture and design patterns
+- **📦 [Installation Guide](docs/INSTALL.md)** - Complete setup instructions
+- **🐳 [Docker Setup](docs/INSTALL.md#docker-installation-recommended)** - Containerized deployment
+- **🔧 [Troubleshooting](docs/INSTALL.md#troubleshooting)** - Common issues and solutions
+- **🔑 [API Keys](docs/INSTALL.md#getting-api-keys)** - Provider setup guide
 
 ## 🏗️ Project Structure
 
 ```tree
 smart-code-reviewer/
+├── docs/                            # 📚 Project Documentation
+│   ├── README.md                    # Documentation index
+│   ├── SYSTEM_DESIGN.md             # System architecture and design
+│   └── INSTALL.md                   # Installation and setup guide
 ├── agents/                          # 🤖 AI Agent System
 │   ├── code_review_agent.py         # Autonomous LangGraph agent with ReAct pattern
 │   ├── tools.py                     # Agent tools
