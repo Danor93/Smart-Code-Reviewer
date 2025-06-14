@@ -649,17 +649,132 @@ curl http://localhost:8080/models
 
 ### Running Tests
 
+The project includes a comprehensive test suite with 50+ tests covering all major functionality.
+
+#### Quick Test Commands
+
 ```bash
-# Basic import tests
+# Run all tests
+make test
+
+# Or using the test runner directly
+python tests/run_tests.py --all
+
+# Check test environment
+python tests/run_tests.py --check
+```
+
+#### Specific Test Types
+
+```bash
+# Unit tests (50+ tests) - Fast, isolated tests
+python tests/run_tests.py --unit
+
+# API tests - Test all REST endpoints
+python tests/run_tests.py --api
+
+# Integration tests - Test RAG and Agent workflows
+python tests/run_tests.py --integration
+
+# Fast tests only (exclude slow tests)
+python tests/run_tests.py --fast
+
+# Run specific test file
+python tests/run_tests.py --test tests/unit/test_api.py
+```
+
+#### Coverage Reports
+
+```bash
+# Generate coverage report
+python tests/run_tests.py --coverage
+
+# Check current coverage
+python tests/check_coverage.py
+
+# View HTML coverage report
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+#### Code Quality Checks
+
+```bash
+# Run all linting tools
+make lint
+
+# Individual tools
+black --check .          # Code formatting
+isort --check-only .     # Import sorting
+flake8 .                 # Code linting
+bandit -r . -x tests/,venv/,examples/  # Security scan
+
+# Auto-format code
+make format
+# Or manually:
+black .
+isort .
+```
+
+#### Test Structure
+
+```
+tests/
+├── unit/                        # Unit tests (50+ tests)
+│   ├── test_api.py              # API endpoint tests (20 tests)
+│   ├── test_data_models.py      # Data model tests (12 tests)
+│   └── test_model_registry.py   # Model registry tests (18 tests)
+├── integration/                 # Integration tests
+│   ├── test_agent.py            # AI Agent workflow tests
+│   └── test_rag.py              # RAG functionality tests
+├── run_tests.py                 # Test runner with coverage
+├── check_coverage.py            # Coverage analysis tool
+└── test_imports.py              # Import verification
+```
+
+#### GitHub Actions CI/CD
+
+The project includes automated testing via GitHub Actions:
+
+```yaml
+# .github/workflows/tests.yml
+- Unit tests on Python 3.9, 3.10, 3.11
+- API endpoint testing
+- Integration test suite
+- Code quality checks (Black, isort, flake8)
+- Security scanning (Bandit)
+- Coverage reporting
+```
+
+#### Test Coverage Goals
+
+- ✅ **Unit Tests**: 90%+ coverage on core modules
+- ✅ **API Tests**: 100% endpoint coverage
+- ✅ **Integration Tests**: RAG and Agent workflows
+- ✅ **Security**: Clean security scan (examples excluded)
+- ✅ **Code Quality**: All linting tools pass
+
+### Basic import tests
+
+```bash
 python tests/test_imports.py
+```
 
-# RAG functionality tests
-python tests/test_rag.py
+### RAG functionality tests
 
-# 🤖 NEW: AI Agent functionality tests
-python tests/test_agent.py
+```bash
+python tests/integration/test_rag.py
+```
 
-# Test specific components manually
+### 🤖 AI Agent functionality tests
+
+```bash
+python tests/integration/test_agent.py
+```
+
+### Test specific components manually
+
+```bash
 python -c "from reviewers import EnhancedCodeReviewer; print('✅ Basic imports work')"
 python -c "from reviewers import RAGCodeReviewer; print('✅ RAG imports work')"
 python -c "from agents import CodeReviewAgent; print('✅ Agent imports work')"
@@ -678,7 +793,7 @@ docker run --rm -d --name test-container -p 8080:5000 \
 curl http://localhost:8080/
 curl http://localhost:8080/rag/knowledge-base/stats
 
-# 🤖 NEW: Test agent endpoints
+# 🤖 Test agent endpoints
 curl http://localhost:8080/agent/info
 curl -X POST http://localhost:8080/agent/review \
   -H "Content-Type: application/json" \
@@ -690,7 +805,7 @@ docker stop test-container
 
 ### Test Scenarios
 
-The system includes comprehensive test cases:
+The system includes comprehensive test cases covering:
 
 1. **Security Vulnerabilities**
 
@@ -705,9 +820,15 @@ The system includes comprehensive test cases:
    - Blocking I/O operations
 
 3. **Best Practices**
+
    - Missing type hints
    - Lack of documentation
    - Error handling gaps
+
+4. **AI Agent Workflows**
+   - Multi-step reasoning
+   - Tool coordination
+   - Error recovery
 
 ## 🚀 Production Deployment
 
