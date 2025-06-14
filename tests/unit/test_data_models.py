@@ -2,11 +2,12 @@
 Unit tests for data models
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
-from models.data_models import ReviewResult, RAGContext, ComparisonResult, ModelConfig
+from models.data_models import ComparisonResult, ModelConfig, RAGContext, ReviewResult
 
 
 @pytest.mark.unit

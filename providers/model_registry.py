@@ -2,18 +2,19 @@
 Model registry and provider management for LangChain integration
 """
 
-import os
-import yaml
-import requests
 import logging
+import os
 from typing import Dict, Optional
+
+import requests
+import yaml
+from langchain_anthropic import ChatAnthropic
+from langchain_community.llms import HuggingFaceHub
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
 
 # LangChain imports
 from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.llms import HuggingFaceHub
-from langchain_ollama import ChatOllama
 
 from models.data_models import ModelConfig
 
@@ -51,11 +52,7 @@ class ModelRegistry:
 
     def get_available_models(self) -> Dict[str, str]:
         """Get list of available models with descriptions"""
-        return {
-            model_id: config.description
-            for model_id, config in self.models.items()
-            if self._is_model_available(model_id)
-        }
+        return {model_id: config.description for model_id, config in self.models.items() if self._is_model_available(model_id)}
 
     def _is_model_available(self, model_id: str) -> bool:
         """Check if model is available (API key exists or Ollama model exists)"""

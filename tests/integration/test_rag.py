@@ -7,6 +7,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Add the project root to the Python path
@@ -39,9 +40,7 @@ async def test_rag_reviewer():
     print(f"RAG initialization: {'✅ Success' if success else '❌ Failed'}")
 
     if not success:
-        print(
-            "❌ RAG initialization failed. Check if knowledge base exists and OpenAI API key is set."
-        )
+        print("❌ RAG initialization failed. Check if knowledge base exists and OpenAI API key is set.")
         return
 
     # Updated stats after initialization
@@ -51,14 +50,10 @@ async def test_rag_reviewer():
 
     # Test 3: Search guidelines
     print("\n🔍 Testing guideline search...")
-    search_results = await rag_reviewer.search_guidelines(
-        "Python security best practices", k=3
-    )
+    search_results = await rag_reviewer.search_guidelines("Python security best practices", k=3)
     print(f"Found {len(search_results)} relevant guidelines")
     for i, result in enumerate(search_results, 1):
-        print(
-            f"  {i}. {result.get('title', 'Unknown')} ({result.get('category', 'general')})"
-        )
+        print(f"  {i}. {result.get('title', 'Unknown')} ({result.get('category', 'general')})")
 
     # Test 4: RAG-enhanced code review
     print("\n🧪 Testing RAG-enhanced code review...")
@@ -88,9 +83,7 @@ def login(username, password):
         print(f"Suggestions: {len(result.suggestions)}")
 
         if hasattr(result, "guideline_categories"):
-            print(
-                f"Categories referenced: {getattr(result, 'guideline_categories', [])}"
-            )
+            print(f"Categories referenced: {getattr(result, 'guideline_categories', [])}")
 
         # Show first issue and suggestion as examples
         if result.issues:
@@ -113,9 +106,7 @@ def login(username, password):
             print("✅ Comparison completed!")
             metrics = comparison.get("comparison", {})
             print(f"Guidelines referenced: {metrics.get('guidelines_referenced', 0)}")
-            print(
-                f"Additional issues found: {metrics.get('additional_issues_found', 0)}"
-            )
+            print(f"Additional issues found: {metrics.get('additional_issues_found', 0)}")
             print(f"Additional suggestions: {metrics.get('additional_suggestions', 0)}")
         else:
             print(f"❌ Comparison failed: {comparison.get('error')}")

@@ -4,10 +4,10 @@ Test runner script for Smart Code Reviewer
 Provides convenient commands for running different types of tests
 """
 
-import os
-import sys
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -34,16 +34,12 @@ def run_unit_tests():
 
 def run_api_tests():
     """Run API tests only"""
-    return run_command(
-        "pytest tests/unit/test_api.py -v --tb=short", "Running API Tests"
-    )
+    return run_command("pytest tests/unit/test_api.py -v --tb=short", "Running API Tests")
 
 
 def run_integration_tests():
     """Run integration tests only"""
-    return run_command(
-        "pytest tests/integration/ -v --tb=short", "Running Integration Tests"
-    )
+    return run_command("pytest tests/integration/ -v --tb=short", "Running Integration Tests")
 
 
 def run_all_tests():
@@ -56,16 +52,12 @@ def run_all_tests():
 
 def run_fast_tests():
     """Run fast tests (excluding slow ones)"""
-    return run_command(
-        "pytest tests/ -m 'not slow' -v --tb=short", "Running Fast Tests"
-    )
+    return run_command("pytest tests/ -m 'not slow' -v --tb=short", "Running Fast Tests")
 
 
 def run_specific_test(test_path):
     """Run a specific test file or test function"""
-    return run_command(
-        f"pytest {test_path} -v --tb=short", f"Running Specific Test: {test_path}"
-    )
+    return run_command(f"pytest {test_path} -v --tb=short", f"Running Specific Test: {test_path}")
 
 
 def check_test_environment():
@@ -184,16 +176,10 @@ Examples:
     group.add_argument("--all", action="store_true", help="Run all tests with coverage")
     group.add_argument("--unit", action="store_true", help="Run unit tests only")
     group.add_argument("--api", action="store_true", help="Run API tests only")
-    group.add_argument(
-        "--integration", action="store_true", help="Run integration tests only"
-    )
-    group.add_argument(
-        "--fast", action="store_true", help="Run fast tests (exclude slow)"
-    )
+    group.add_argument("--integration", action="store_true", help="Run integration tests only")
+    group.add_argument("--fast", action="store_true", help="Run fast tests (exclude slow)")
     group.add_argument("--check", action="store_true", help="Check test environment")
-    group.add_argument(
-        "--coverage", action="store_true", help="Generate coverage report"
-    )
+    group.add_argument("--coverage", action="store_true", help="Generate coverage report")
     group.add_argument("--clean", action="store_true", help="Clean test artifacts")
     group.add_argument("--test", type=str, help="Run specific test file or function")
 

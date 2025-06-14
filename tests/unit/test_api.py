@@ -2,9 +2,10 @@
 Unit tests for Flask API endpoints
 """
 
-import pytest
 import json
 from unittest.mock import Mock, patch
+
+import pytest
 
 from models.data_models import ReviewResult
 
@@ -121,9 +122,7 @@ class TestApiEndpoints:
 
     def test_review_custom_endpoint_error(self, flask_test_client):
         """Test custom review endpoint error handling"""
-        with patch(
-            "app.reviewer.review_code_async", side_effect=Exception("Review error")
-        ):
+        with patch("app.reviewer.review_code_async", side_effect=Exception("Review error")):
             test_data = {"code": "def test(): pass", "language": "python"}
 
             response = flask_test_client.post(
@@ -142,9 +141,7 @@ class TestApiEndpoints:
         """Test file review endpoint"""
         with patch("app.get_available_files", return_value=["test.py"]):
             with patch("app.read_file_content", return_value="def test(): pass"):
-                with patch(
-                    "app.reviewer.review_code", return_value=sample_review_result
-                ):
+                with patch("app.reviewer.review_code", return_value=sample_review_result):
                     response = flask_test_client.get("/review/test.py?model=gpt-4")
 
                     assert response.status_code == 200
@@ -167,9 +164,7 @@ class TestApiEndpoints:
 
     def test_rag_review_custom_endpoint(self, flask_test_client, sample_review_result):
         """Test RAG custom review endpoint"""
-        with patch(
-            "app.rag_reviewer.review_code_with_rag", return_value=sample_review_result
-        ):
+        with patch("app.rag_reviewer.review_code_with_rag", return_value=sample_review_result):
             test_data = {"code": "def test(): pass", "language": "python"}
 
             response = flask_test_client.post(
@@ -197,9 +192,7 @@ class TestApiEndpoints:
             },
         }
 
-        with patch(
-            "app.rag_reviewer.compare_rag_vs_traditional", return_value=mock_comparison
-        ):
+        with patch("app.rag_reviewer.compare_rag_vs_traditional", return_value=mock_comparison):
             test_data = {"code": "def test(): pass", "language": "python"}
 
             response = flask_test_client.post(
@@ -247,9 +240,7 @@ class TestApiEndpoints:
             "available_categories": ["security", "performance"],
         }
 
-        with patch(
-            "app.rag_reviewer.get_knowledge_base_stats", return_value=mock_stats
-        ):
+        with patch("app.rag_reviewer.get_knowledge_base_stats", return_value=mock_stats):
             response = flask_test_client.get("/rag/knowledge-base/stats")
 
             assert response.status_code == 200
@@ -366,9 +357,7 @@ class TestApiIntegration:
             "comparison": {"rating_improvement": 1},
         }
 
-        with patch(
-            "app.rag_reviewer.compare_rag_vs_traditional", return_value=mock_comparison
-        ):
+        with patch("app.rag_reviewer.compare_rag_vs_traditional", return_value=mock_comparison):
             compare_response = flask_test_client.post(
                 "/rag/compare",
                 data=json.dumps({"code": "def test(): pass", "language": "python"}),

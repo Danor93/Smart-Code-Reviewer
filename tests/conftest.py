@@ -4,11 +4,12 @@ Pytest configuration and fixtures for Smart Code Reviewer tests
 
 import os
 import sys
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Add the project root to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -141,8 +142,9 @@ def mock_document_loader():
 @pytest.fixture
 def sample_review_result():
     """Sample review result for testing"""
-    from models.data_models import ReviewResult
     from datetime import datetime
+
+    from models.data_models import ReviewResult
 
     return ReviewResult(
         rating=3,

@@ -5,15 +5,15 @@ This module provides vector storage and similarity search capabilities
 for the Smart Code Reviewer's knowledge base.
 """
 
-import os
 import logging
-from typing import List, Optional, Dict, Any
+import os
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import chromadb
+from langchain.schema import Document
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
-from langchain.schema import Document
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,7 @@ class VectorStore:
 
         # Ensure persist directory exists
         self.persist_directory.mkdir(parents=True, exist_ok=True)
-        logger.info(
-            f"VectorStore initialized with persist_directory: {self.persist_directory}"
-        )
+        logger.info(f"VectorStore initialized with persist_directory: {self.persist_directory}")
 
     async def create_vectorstore(self, documents: List[Document]) -> bool:
         """
@@ -80,9 +78,7 @@ class VectorStore:
 
             # In newer ChromaDB versions, persistence happens automatically
 
-            logger.info(
-                f"Vector store created and persisted with {len(documents)} documents"
-            )
+            logger.info(f"Vector store created and persisted with {len(documents)} documents")
             return True
 
         except Exception as e:
@@ -98,9 +94,7 @@ class VectorStore:
         """
         try:
             if not self.persist_directory.exists():
-                logger.warning(
-                    f"Persist directory does not exist: {self.persist_directory}"
-                )
+                logger.warning(f"Persist directory does not exist: {self.persist_directory}")
                 return False
 
             self.vectorstore = Chroma(
@@ -122,9 +116,7 @@ class VectorStore:
             logger.error(f"Error loading vector store: {str(e)}")
             return False
 
-    async def similarity_search(
-        self, query: str, k: int = 3, filter_dict: Optional[Dict[str, Any]] = None
-    ) -> List[Document]:
+    async def similarity_search(self, query: str, k: int = 3, filter_dict: Optional[Dict[str, Any]] = None) -> List[Document]:
         """
         Perform similarity search on the vector store.
 
@@ -144,15 +136,11 @@ class VectorStore:
 
             # Perform similarity search
             if filter_dict:
-                docs = self.vectorstore.similarity_search(
-                    query=query, k=k, filter=filter_dict
-                )
+                docs = self.vectorstore.similarity_search(query=query, k=k, filter=filter_dict)
             else:
                 docs = self.vectorstore.similarity_search(query=query, k=k)
 
-            logger.info(
-                f"Found {len(docs)} relevant documents for query: '{query[:50]}...'"
-            )
+            logger.info(f"Found {len(docs)} relevant documents for query: '{query[:50]}...'")
             return docs
 
         except Exception as e:
@@ -181,26 +169,18 @@ class VectorStore:
 
             # Perform similarity search with scores
             if filter_dict:
-                results = self.vectorstore.similarity_search_with_score(
-                    query=query, k=k, filter=filter_dict
-                )
+                results = self.vectorstore.similarity_search_with_score(query=query, k=k, filter=filter_dict)
             else:
-                results = self.vectorstore.similarity_search_with_score(
-                    query=query, k=k
-                )
+                results = self.vectorstore.similarity_search_with_score(query=query, k=k)
 
-            logger.info(
-                f"Found {len(results)} scored results for query: '{query[:50]}...'"
-            )
+            logger.info(f"Found {len(results)} scored results for query: '{query[:50]}...'")
             return results
 
         except Exception as e:
             logger.error(f"Error during similarity search with score: {str(e)}")
             return []
 
-    async def search_by_category(
-        self, query: str, category: str, k: int = 3
-    ) -> List[Document]:
+    async def search_by_category(self, query: str, category: str, k: int = 3) -> List[Document]:
         """
         Search for documents within a specific category.
 

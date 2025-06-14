@@ -6,16 +6,16 @@ for comprehensive code review testing.
 
 import hashlib
 import json
-import time
-from typing import List, Dict, Optional, Any
-from dataclasses import dataclass, field
+import os
+import pickle
 import random
 import threading
-from collections import defaultdict
+import time
 import uuid
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime
-import pickle
-import os
+from typing import Any, Dict, List, Optional
 
 # ISSUE: Weak cryptographic configuration
 HASH_ALGORITHM = "sha256"  # ISSUE: Algorithm should be configurable
@@ -47,9 +47,7 @@ class Transaction:
 
     def calculate_hash(self) -> str:
         """Calculate transaction hash - ISSUE: No salt/nonce"""
-        transaction_string = (
-            f"{self.sender}{self.receiver}{self.amount}{self.timestamp}"
-        )
+        transaction_string = f"{self.sender}{self.receiver}{self.amount}{self.timestamp}"
         return hashlib.sha256(transaction_string.encode()).hexdigest()
 
 
@@ -113,14 +111,10 @@ class Wallet:
         """Sign transaction - ISSUE: Fake signature implementation"""
         # ISSUE: Not using proper cryptographic signatures
         message = f"{transaction.sender}{transaction.receiver}{transaction.amount}"
-        signature_hash = hashlib.sha256(
-            (message + self.private_key).encode()
-        ).hexdigest()
+        signature_hash = hashlib.sha256((message + self.private_key).encode()).hexdigest()
         return signature_hash
 
-    def create_transaction(
-        self, receiver: str, amount: float, fee: float = 0.1
-    ) -> Optional[Transaction]:
+    def create_transaction(self, receiver: str, amount: float, fee: float = 0.1) -> Optional[Transaction]:
         """Create new transaction"""
 
         # ISSUE: No input validation
@@ -128,9 +122,7 @@ class Wallet:
             print(f"Insufficient balance: {self.balance}")
             return None
 
-        transaction = Transaction(
-            sender=self.address, receiver=receiver, amount=amount, fee=fee
-        )
+        transaction = Transaction(sender=self.address, receiver=receiver, amount=amount, fee=fee)
 
         # ISSUE: Signature not properly validated
         transaction.signature = self.sign_transaction(transaction)
@@ -155,9 +147,7 @@ class TransactionPool:
             self.pending_transactions.append(transaction)
             return True
 
-    def get_transactions_for_block(
-        self, max_transactions: int = 100
-    ) -> List[Transaction]:
+    def get_transactions_for_block(self, max_transactions: int = 100) -> List[Transaction]:
         """Get transactions for new block"""
 
         with self.lock:
@@ -171,11 +161,7 @@ class TransactionPool:
 
         with self.lock:
             # ISSUE: Inefficient removal process
-            self.pending_transactions = [
-                tx
-                for tx in self.pending_transactions
-                if tx.transaction_id not in transaction_ids
-            ]
+            self.pending_transactions = [tx for tx in self.pending_transactions if tx.transaction_id not in transaction_ids]
 
 
 class Blockchain:
@@ -194,9 +180,7 @@ class Blockchain:
 
     def _create_genesis_block(self) -> Block:
         """Create the genesis block"""
-        genesis_transaction = Transaction(
-            sender="genesis", receiver="genesis", amount=0, timestamp=time.time()
-        )
+        genesis_transaction = Transaction(sender="genesis", receiver="genesis", amount=0, timestamp=time.time())
 
         genesis_block = Block(
             index=0,
@@ -298,9 +282,7 @@ class Blockchain:
             new_block.mine_block(self.difficulty)
 
             mining_time = time.time() - start_time
-            print(
-                f"Block mined in {mining_time:.2f} seconds with nonce {new_block.nonce}"
-            )
+            print(f"Block mined in {mining_time:.2f} seconds with nonce {new_block.nonce}")
 
             # Add block to chain
             self.chain.append(new_block)
@@ -316,19 +298,13 @@ class Blockchain:
 
         for transaction in transactions:
             if transaction.sender != "system":
-                self.balances[transaction.sender] -= (
-                    transaction.amount + transaction.fee
-                )
+                self.balances[transaction.sender] -= transaction.amount + transaction.fee
                 if transaction.sender in self.wallets:
-                    self.wallets[transaction.sender].balance = self.balances[
-                        transaction.sender
-                    ]
+                    self.wallets[transaction.sender].balance = self.balances[transaction.sender]
 
             self.balances[transaction.receiver] += transaction.amount
             if transaction.receiver in self.wallets:
-                self.wallets[transaction.receiver].balance = self.balances[
-                    transaction.receiver
-                ]
+                self.wallets[transaction.receiver].balance = self.balances[transaction.receiver]
 
     def get_balance(self, address: str) -> float:
         """Get balance for address"""
@@ -489,9 +465,7 @@ class BlockchainSimulation:
             wallet = self.blockchain.create_wallet(address)
             self.wallets.append(wallet)
 
-        print(
-            f"Network setup complete: {len(self.nodes)} nodes, {len(self.wallets)} wallets"
-        )
+        print(f"Network setup complete: {len(self.nodes)} nodes, {len(self.wallets)} wallets")
 
     def generate_random_transaction(self) -> Optional[Transaction]:
         """Generate random transaction for simulation"""
@@ -519,10 +493,7 @@ class BlockchainSimulation:
         print("Starting blockchain simulation...")
         start_time = time.time()
 
-        while (
-            self.running
-            and (time.time() - start_time) < self.config["simulation_duration"]
-        ):
+        while self.running and (time.time() - start_time) < self.config["simulation_duration"]:
             try:
                 # Generate random transactions
                 for _ in range(self.config["transaction_frequency"]):
@@ -577,14 +548,10 @@ class BlockchainSimulation:
             balance = self.blockchain.get_balance(wallet.address)
             print(f"  {wallet.address}: {balance:.2f}")
 
-        print(
-            f"\nPending transactions: {len(self.blockchain.transaction_pool.pending_transactions)}"
-        )
+        print(f"\nPending transactions: {len(self.blockchain.transaction_pool.pending_transactions)}")
 
         # ISSUE: No comprehensive metrics
-        total_transactions = sum(
-            len(block.transactions) for block in self.blockchain.chain
-        )
+        total_transactions = sum(len(block.transactions) for block in self.blockchain.chain)
         print(f"Total transactions processed: {total_transactions}")
 
 

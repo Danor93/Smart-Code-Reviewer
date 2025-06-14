@@ -5,10 +5,10 @@ Test script for AI Agent functionality.
 This script tests the CodeReviewAgent and its integration with the RAG system.
 """
 
-import os
-import sys
 import asyncio
 import logging
+import os
+import sys
 from pathlib import Path
 
 # Add the parent directory to the path so we can import our modules
@@ -70,27 +70,21 @@ async def test_agent_tools():
         print("Testing RAG code review tool...")
         from agents.tools import rag_code_review
 
-        result = rag_code_review.invoke(
-            {"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"}
-        )
+        result = rag_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
         print(f"✅ RAG review result: {len(result)} characters")
 
         # Test traditional code review tool
         print("Testing traditional code review tool...")
         from agents.tools import traditional_code_review
 
-        result = traditional_code_review.invoke(
-            {"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"}
-        )
+        result = traditional_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
         print(f"✅ Traditional review result: {len(result)} characters")
 
         # Test guidelines search
         print("Testing guidelines search...")
         from agents.tools import search_guidelines
 
-        result = search_guidelines.invoke(
-            {"query": "python security best practices", "k": 3}
-        )
+        result = search_guidelines.invoke({"query": "python security best practices", "k": 3})
         print(f"✅ Guidelines search result: {len(result)} characters")
 
         # Test knowledge base stats

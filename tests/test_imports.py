@@ -38,7 +38,7 @@ def test_basic_imports():
         return False
 
     try:
-        from models.data_models import ReviewResult, RAGContext, ComparisonResult
+        from models.data_models import ComparisonResult, RAGContext, ReviewResult
 
         print("✅ Data models import successful")
     except ImportError as e:

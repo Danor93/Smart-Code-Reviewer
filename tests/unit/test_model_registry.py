@@ -2,14 +2,15 @@
 Unit tests for ModelRegistry
 """
 
-import pytest
-import yaml
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
-from providers.model_registry import ModelRegistry
+import pytest
+import yaml
+
 from models.data_models import ModelConfig
+from providers.model_registry import ModelRegistry
 
 
 class TestModelRegistry:
@@ -136,9 +137,7 @@ class TestModelRegistry:
         assert registry._is_ollama_model_available("llama2:latest") is False
 
     @patch("requests.get")
-    def test_is_ollama_model_available_connection_error(
-        self, mock_get, temp_config_file
-    ):
+    def test_is_ollama_model_available_connection_error(self, mock_get, temp_config_file):
         """Test Ollama model availability check - connection error"""
         import requests
 
@@ -154,9 +153,7 @@ class TestModelRegistry:
                 registry = ModelRegistry(config_path=temp_config_file)
                 model = registry.create_model("gpt-4")
 
-                mock_chat_openai.assert_called_once_with(
-                    model="gpt-4", temperature=0.7, max_tokens=2048, api_key="test-key"
-                )
+                mock_chat_openai.assert_called_once_with(model="gpt-4", temperature=0.7, max_tokens=2048, api_key="test-key")
 
     def test_create_model_anthropic(self, temp_config_file):
         """Test creating Anthropic model"""
