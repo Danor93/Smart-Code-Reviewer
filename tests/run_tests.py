@@ -18,7 +18,7 @@ def run_command(command, description=None):
         print("-" * (len(description) + 4))
 
     print(f"$ {command}")
-    result = subprocess.run(command, shell=True)
+    result = subprocess.run(command, shell=True)  # nosec B602
 
     if result.returncode != 0:
         print(f"❌ Command failed with exit code {result.returncode}")

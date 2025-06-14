@@ -11,6 +11,8 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add the parent directory to the path so we can import our modules
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -59,128 +61,126 @@ def authenticate(username, password):
 """
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_agent_tools():
     """Test the agent tools functionality."""
     print("🔧 Testing Agent Tools...")
 
-    try:
-        tools = AgentTools()
+    tools = AgentTools()
 
-        # Test RAG code review tool
-        print("Testing RAG code review tool...")
-        from agents.tools import rag_code_review
+    # Test RAG code review tool
+    print("Testing RAG code review tool...")
+    from agents.tools import rag_code_review
 
-        result = rag_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
-        print(f"✅ RAG review result: {len(result)} characters")
+    result = rag_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
+    print(f"✅ RAG review result: {len(result)} characters")
+    assert len(result) > 0, "RAG code review should return non-empty result"
 
-        # Test traditional code review tool
-        print("Testing traditional code review tool...")
-        from agents.tools import traditional_code_review
+    # Test traditional code review tool
+    print("Testing traditional code review tool...")
+    from agents.tools import traditional_code_review
 
-        result = traditional_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
-        print(f"✅ Traditional review result: {len(result)} characters")
+    result = traditional_code_review.invoke({"code": SIMPLE_PYTHON_CODE, "language": "python", "model_id": "gpt-4"})
+    print(f"✅ Traditional review result: {len(result)} characters")
+    assert len(result) > 0, "Traditional code review should return non-empty result"
 
-        # Test guidelines search
-        print("Testing guidelines search...")
-        from agents.tools import search_guidelines
+    # Test guidelines search
+    print("Testing guidelines search...")
+    from agents.tools import search_guidelines
 
-        result = search_guidelines.invoke({"query": "python security best practices", "k": 3})
-        print(f"✅ Guidelines search result: {len(result)} characters")
+    result = search_guidelines.invoke({"query": "python security best practices", "k": 3})
+    print(f"✅ Guidelines search result: {len(result)} characters")
+    assert len(result) > 0, "Guidelines search should return non-empty result"
 
-        # Test knowledge base stats
-        print("Testing knowledge base stats...")
-        from agents.tools import get_knowledge_base_stats
+    # Test knowledge base stats
+    print("Testing knowledge base stats...")
+    from agents.tools import get_knowledge_base_stats
 
-        result = get_knowledge_base_stats.invoke({})
-        print(f"✅ Knowledge base stats: {len(result)} characters")
+    result = get_knowledge_base_stats.invoke({})
+    print(f"✅ Knowledge base stats: {len(result)} characters")
+    assert len(result) > 0, "Knowledge base stats should return non-empty result"
 
-        print("✅ All agent tools tested successfully!")
-        return True
-
-    except Exception as e:
-        print(f"❌ Error testing agent tools: {str(e)}")
-        return False
+    print("✅ All agent tools tested successfully!")
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_code_review_agent():
     """Test the CodeReviewAgent functionality."""
     print("\n🤖 Testing Code Review Agent...")
 
-    try:
-        agent = CodeReviewAgent(model_id="gpt-4")
+    agent = CodeReviewAgent(model_id="gpt-4")
 
-        # Test simple code review
-        print("Testing simple code review...")
-        request = CodeReviewRequest(
-            code=SIMPLE_PYTHON_CODE,
-            language="python",
-            user_request="Review this simple Python function",
-        )
+    # Test simple code review
+    print("Testing simple code review...")
+    request = CodeReviewRequest(
+        code=SIMPLE_PYTHON_CODE,
+        language="python",
+        user_request="Review this simple Python function",
+    )
 
-        result = await agent.review_code(request)
+    result = await agent.review_code(request)
 
-        if "error" in result:
-            print(f"⚠️  Agent returned error: {result['error']}")
-            return False
+    assert "error" not in result, f"Agent returned error: {result.get('error', 'Unknown error')}"
 
-        print(f"✅ Agent review completed:")
-        print(f"  - Iterations: {result['agent_analysis']['iterations']}")
-        print(f"  - Tools used: {result['agent_analysis']['tools_used']}")
-        print(f"  - Workflow complete: {result['metadata']['workflow_complete']}")
+    print(f"✅ Agent review completed:")
+    print(f"  - Iterations: {result['agent_analysis']['iterations']}")
+    print(f"  - Tools used: {result['agent_analysis']['tools_used']}")
+    print(f"  - Workflow complete: {result['metadata']['workflow_complete']}")
 
-        # Test vulnerable code review
-        print("\nTesting vulnerable code review...")
-        request = CodeReviewRequest(
-            code=VULNERABLE_PYTHON_CODE,
-            language="python",
-            user_request="Focus on security vulnerabilities in this code",
-        )
+    assert result["agent_analysis"]["iterations"] > 0, "Agent should have at least one iteration"
+    assert len(result["agent_analysis"]["tools_used"]) > 0, "Agent should use at least one tool"
+    assert result["metadata"]["workflow_complete"] is True, "Workflow should be complete"
 
-        result = await agent.review_code(request)
+    # Test vulnerable code review
+    print("\nTesting vulnerable code review...")
+    request = CodeReviewRequest(
+        code=VULNERABLE_PYTHON_CODE,
+        language="python",
+        user_request="Focus on security vulnerabilities in this code",
+    )
 
-        if "error" in result:
-            print(f"⚠️  Agent returned error: {result['error']}")
-            return False
+    result = await agent.review_code(request)
 
-        print(f"✅ Vulnerable code review completed:")
-        print(f"  - Iterations: {result['agent_analysis']['iterations']}")
-        print(f"  - Tools used: {result['agent_analysis']['tools_used']}")
+    assert "error" not in result, f"Agent returned error: {result.get('error', 'Unknown error')}"
 
-        # Test agent info
-        print("\nTesting agent info...")
-        info = agent.get_agent_info()
-        print(f"✅ Agent info retrieved:")
-        print(f"  - Agent type: {info['agent_type']}")
-        print(f"  - Model: {info['model_id']}")
-        print(f"  - Available tools: {len(info['available_tools'])}")
-        print(f"  - Capabilities: {len(info['capabilities'])}")
+    print(f"✅ Vulnerable code review completed:")
+    print(f"  - Iterations: {result['agent_analysis']['iterations']}")
+    print(f"  - Tools used: {result['agent_analysis']['tools_used']}")
 
-        print("✅ All agent tests passed!")
-        return True
+    assert result["agent_analysis"]["iterations"] > 0, "Agent should have at least one iteration"
+    assert len(result["agent_analysis"]["tools_used"]) > 0, "Agent should use at least one tool"
 
-    except Exception as e:
-        print(f"❌ Error testing agent: {str(e)}")
-        import traceback
+    # Test agent info
+    print("\nTesting agent info...")
+    info = agent.get_agent_info()
+    print(f"✅ Agent info retrieved:")
+    print(f"  - Agent type: {info['agent_type']}")
+    print(f"  - Model: {info['model_id']}")
+    print(f"  - Available tools: {len(info['available_tools'])}")
+    print(f"  - Capabilities: {len(info['capabilities'])}")
 
-        traceback.print_exc()
-        return False
+    assert info["agent_type"] == "CodeReviewAgent", "Agent type should be CodeReviewAgent"
+    assert info["model_id"] == "gpt-4", "Model ID should be gpt-4"
+    assert len(info["available_tools"]) > 0, "Agent should have available tools"
+    assert len(info["capabilities"]) > 0, "Agent should have capabilities"
+
+    print("✅ All agent tests passed!")
 
 
 def test_imports():
     """Test that all imports work correctly."""
     print("📦 Testing imports...")
 
-    try:
-        from agents import CodeReviewAgent, CodeReviewRequest
-        from agents.tools import AgentTools
+    from agents import CodeReviewAgent, CodeReviewRequest
+    from agents.tools import AgentTools
 
-        print("✅ All imports successful!")
-        return True
-    except Exception as e:
-        print(f"❌ Import error: {str(e)}")
-        return False
+    print("✅ All imports successful!")
+    assert True  # If we get here, imports succeeded
 
 
+# Keep the main function for standalone execution
 async def main():
     """Run all tests."""
     print("🧪 Starting AI Agent Tests")
@@ -191,19 +191,16 @@ async def main():
         print("⚠️  Warning: OPENAI_API_KEY not set. Some tests may fail.")
 
     # Test imports
-    if not test_imports():
-        print("❌ Import tests failed. Exiting.")
-        return False
+    test_imports()
+    print("✅ Import tests passed.")
 
     # Test agent tools
-    if not await test_agent_tools():
-        print("❌ Agent tools tests failed.")
-        return False
+    await test_agent_tools()
+    print("✅ Agent tools tests passed.")
 
     # Test code review agent
-    if not await test_code_review_agent():
-        print("❌ Code review agent tests failed.")
-        return False
+    await test_code_review_agent()
+    print("✅ Code review agent tests passed.")
 
     print("\n" + "=" * 50)
     print("🎉 All tests passed! Agent integration is working correctly.")
@@ -218,8 +215,6 @@ async def main():
     print("curl -X POST http://localhost:8080/agent/review \\")
     print('  -H "Content-Type: application/json" \\')
     print('  -d \'{"code": "def hello(): print(\\"Hello\\")"}\'')
-
-    return True
 
 
 if __name__ == "__main__":
